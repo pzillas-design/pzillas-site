@@ -1,0 +1,107 @@
+<h2>Designplan: pzillas.com als Next.js</h2>
+<p class="subtitle">Komplett neu aufgebaut — von Null. Bitte bestätige den Plan oder sag, was geändert werden soll.</p>
+
+<div class="section">
+  <div class="label">Seitenstruktur</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+    <div style="background:#111;border:1px solid #333;border-radius:8px;padding:16px">
+      <div style="font-size:13px;color:#60a5fa;font-weight:600;margin-bottom:8px">/ Homepage</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.8">
+        • Nav: Fotografie · UX/UI · Kontakt<br>
+        • Über mich: Bio-Text (Mediendesigner in Frankfurt)<br>
+        • Videos: YouTube-Embeds (Teneriffa, Augmented Spaces, Telroth)<br>
+        • UX/UI Design: Projektübersicht<br>
+        • Fotografie: Link zu /foto
+      </div>
+    </div>
+    <div style="background:#111;border:1px solid #333;border-radius:8px;padding:16px">
+      <div style="font-size:13px;color:#60a5fa;font-weight:600;margin-bottom:8px">/foto · /foto/living · /foto/events · /foto/people</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.8">
+        • /foto: Kategorieübersicht (Living / Events / People)<br>
+        • /foto/living: "Lebensräume meisterhaft inszeniert." + Foto-Grid<br>
+        • /foto/events: "Bring your Community closer" + Fotos<br>
+        • /foto/people: "Szenen des Lebens" + Fotos
+      </div>
+    </div>
+    <div style="background:#111;border:1px solid #333;border-radius:8px;padding:16px">
+      <div style="font-size:13px;color:#60a5fa;font-weight:600;margin-bottom:8px">/uxui</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.8">
+        • Tososto · 600kids.org · Wassertechnik<br>
+        • Crewting · PMS Manager · Leasehub<br>
+        • FlorianzimmerTicketshop · Staatstheater Darmstadt<br>
+        • JAKOB AdminPortal · JAKOB Techniker-App<br>
+        • QR Mine · EV Moosburg · Bout (Concept)
+      </div>
+    </div>
+    <div style="background:#111;border:1px solid #333;border-radius:8px;padding:16px">
+      <div style="font-size:13px;color:#60a5fa;font-weight:600;margin-bottom:8px">/kontakt · /impressum</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.8">
+        • /kontakt: Email + Telefon, Beratungstext<br>
+        • /impressum: Name, Adresse, Email<br>
+        <br>
+        • Footer auf allen Seiten: Logo PNG + Social Links
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Design & Tech</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
+    <div style="background:#111;border:1px solid #333;border-radius:8px;padding:14px">
+      <div style="font-size:12px;color:#34d399;font-weight:600;margin-bottom:6px">Fonts</div>
+      <div style="font-size:12px;color:#aaa">Space Mono (Google Fonts)<br>+ Adobe Typekit Fallback</div>
+    </div>
+    <div style="background:#111;border:1px solid #333;border-radius:8px;padding:14px">
+      <div style="font-size:12px;color:#34d399;font-weight:600;margin-bottom:6px">Farben</div>
+      <div style="font-size:12px;color:#aaa">Hintergrund: #000<br>Text: #fff<br>Accent: wie Squarespace</div>
+    </div>
+    <div style="background:#111;border:1px solid #333;border-radius:8px;padding:14px">
+      <div style="font-size:12px;color:#34d399;font-weight:600;margin-bottom:6px">Bilder</div>
+      <div style="font-size:12px;color:#aaa">Download von Squarespace CDN nach /public/<br>Next.js Image Optimierung</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Was gelöscht / neu gebaut wird</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+    <div style="background:#1a0000;border:1px solid #7f1d1d;border-radius:8px;padding:14px">
+      <div style="font-size:12px;color:#f87171;font-weight:600;margin-bottom:6px">Wird gelöscht</div>
+      <div style="font-size:12px;color:#aaa">
+        src/app/page.tsx (CRISPY PIXELS)<br>
+        src/components/Header.tsx<br>
+        src/components/Footer.tsx<br>
+        src/components/GeometricArt.tsx<br>
+        src/app/globals.css<br>
+        src/app/layout.tsx
+      </div>
+    </div>
+    <div style="background:#001a0a;border:1px solid #14532d;border-radius:8px;padding:14px">
+      <div style="font-size:12px;color:#34d399;font-weight:600;margin-bottom:6px">Wird neu gebaut</div>
+      <div style="font-size:12px;color:#aaa">
+        layout.tsx + globals.css (Space Mono)<br>
+        Header.tsx (mit Hamburger-Menü)<br>
+        Footer.tsx (Logo PNG + Social)<br>
+        page.tsx (Bio + Videos + UX/UI + Foto)<br>
+        foto/page.tsx + living/ events/ people/<br>
+        uxui/page.tsx · kontakt/page.tsx · impressum/page.tsx<br>
+        public/images/ (alle Fotos runtergeladen)
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Deployment</div>
+  <div style="background:#111;border:1px solid #333;border-radius:8px;padding:14px;margin-top:12px;font-size:12px;color:#aaa;line-height:1.8">
+    1. GitHub Repo erstellen (pzillas-site)<br>
+    2. Code pushen<br>
+    3. Vercel verbinden → automatisches Deployment<br>
+    4. Domain pzillas.com auf Vercel umleiten (DNS-Änderung bei Squarespace — das machst du selbst, ich erkläre wie)
+  </div>
+</div>
+
+<div style="margin-top:24px;padding:16px;background:#0f172a;border:1px solid #3b82f6;border-radius:8px;font-size:13px;color:#93c5fd">
+  Sieht das gut aus? Wenn ja, schreib "ja" oder "ok" — dann lege ich den detaillierten Implementierungsplan an und fange an zu bauen.
+</div>
