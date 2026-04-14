@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-muted: #999999;
+  --color-border: #333333;
+  --font-mono: "Space Mono", monospace;
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #000;
+  color: #fff;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
