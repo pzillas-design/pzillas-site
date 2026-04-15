@@ -105,15 +105,15 @@ export default function Home() {
         </section>
 
         {/* ── Intro ── */}
-        <section className="px-6 md:px-12 py-16 md:py-24 flex flex-col md:flex-row gap-12 md:gap-20 items-center border-t border-white/[0.06]">
-          <div className="flex-1">
+        <section className="px-6 md:px-12 py-16 md:py-24 flex flex-col md:flex-row gap-12 md:gap-20 items-start md:items-center border-t border-white/[0.06]">
+          <div className="flex-1 w-full min-w-0">
             <p className="font-mono font-bold leading-tight tracking-tight"
               style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>
               FOTOS<br />VIDEOS<br />UX/UI
             </p>
           </div>
-          <div className="flex-1">
-            <p className="font-sans text-base text-[#ccc] leading-7 max-w-lg">
+          <div className="flex-1 w-full min-w-0">
+            <p className="font-sans text-base text-[#ccc] leading-7">
               Ich bin Michael Pzillas, freischaffender Mediendesigner und lebe in Frankfurt.
               Ich fühle mich in allen Bereichen der Kommunikation zu Hause, von Webentwicklung
               und UX/UI-Design bis hin zu Fotografie und Videoproduktion.
