@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useRef } from "react";
 
 interface GalleryItem {
   src: string;
@@ -18,14 +21,22 @@ export default function GallerySlider({
   itemWidth = 420,
   itemHeight = 380,
 }: GallerySliderProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const scroll = (dir: number) =>
+    ref.current?.scrollBy({ left: dir * (itemWidth + 16), behavior: "smooth" });
+
   return (
-    <div className="pl-lg overflow-hidden">
-      <div className="flex gap-sm overflow-x-auto no-scrollbar pb-xs">
+    <div className="pl-6 md:pl-12">
+      <div
+        ref={ref}
+        className="no-scrollbar flex gap-4 overflow-x-auto pb-2"
+        style={{ scrollbarWidth: "none" }}
+      >
         {items.map((item) => {
           const card = (
             <div className="shrink-0 group" style={{ width: itemWidth }}>
               <div
-                className="relative rounded overflow-hidden bg-white/5"
+                className="relative rounded-lg overflow-hidden bg-white/5"
                 style={{ width: itemWidth, height: itemHeight }}
               >
                 <Image
@@ -37,7 +48,7 @@ export default function GallerySlider({
                 />
               </div>
               {item.label && (
-                <p className="font-mono text-xs tracking-widest uppercase text-white/60 mt-sm group-hover:text-white transition-colors">
+                <p className="font-mono text-xs tracking-widest uppercase text-white/50 mt-3 group-hover:text-white transition-colors">
                   {item.label}
                 </p>
               )}
@@ -53,6 +64,26 @@ export default function GallerySlider({
           }
           return <div key={item.src}>{card}</div>;
         })}
+      </div>
+
+      {/* Arrows */}
+      <div className="flex gap-4 mt-4 pr-6 md:pr-12 justify-end">
+        <button
+          onClick={() => scroll(-1)}
+          className="opacity-50 hover:opacity-100 transition-opacity"
+          aria-label="Previous"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/arrow-left.svg" className="h-7 w-auto" alt="" />
+        </button>
+        <button
+          onClick={() => scroll(1)}
+          className="opacity-50 hover:opacity-100 transition-opacity"
+          aria-label="Next"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/arrow-right.svg" className="h-9 w-auto" alt="" />
+        </button>
       </div>
     </div>
   );
