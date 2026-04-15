@@ -8,9 +8,9 @@ interface PhotoGridProps {
 export default function PhotoGrid({ images, columns = 3 }: PhotoGridProps) {
   const colClass = columns === 2 ? "md:grid-cols-2" : "md:grid-cols-3";
   return (
-    <div className={`grid grid-cols-1 ${colClass} gap-2`}>
+    <div className={`grid grid-cols-1 ${colClass} gap-xs`}>
       {images.map((img) => (
-        <div key={img.src} className="relative aspect-[4/3] overflow-hidden">
+        <div key={img.src} className="relative aspect-[4/3] overflow-hidden rounded">
           <Image
             src={img.src}
             alt={img.alt}

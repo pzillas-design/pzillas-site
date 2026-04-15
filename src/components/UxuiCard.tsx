@@ -8,8 +8,8 @@ interface UxuiCardProps {
 
 export default function UxuiCard({ title, description, image }: UxuiCardProps) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="relative aspect-[16/10] overflow-hidden bg-zinc-900">
+    <div className="flex flex-col gap-xs">
+      <div className="relative aspect-[16/10] overflow-hidden bg-white/5 rounded">
         <Image
           src={image}
           alt={title}
@@ -19,7 +19,7 @@ export default function UxuiCard({ title, description, image }: UxuiCardProps) {
         />
       </div>
       <h3 className="font-mono text-sm tracking-widest uppercase text-white">{title}</h3>
-      <p className="font-sans text-sm text-white/60 leading-relaxed">{description}</p>
+      <p className="font-sans text-sm text-muted leading-relaxed">{description}</p>
     </div>
   );
 }

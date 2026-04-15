@@ -7,6 +7,13 @@
   --color-border: #333333;
   --font-mono: "Space Mono", monospace;
   --font-sans: "Space Grotesk", system-ui, sans-serif;
+
+  /* Spacing System (synced with Figma variables) */
+  --spacing-xs: 0.5rem;   /* 8px  — tight gaps, icon spacing */
+  --spacing-sm: 1rem;     /* 16px — small gaps, slider items */
+  --spacing-md: 2rem;     /* 32px — medium gaps, nav, footer */
+  --spacing-lg: 3rem;     /* 48px — section padding L/R, large gaps */
+  --spacing-xl: 5rem;     /* 80px — section padding vertical, whitespace */
 }
 
 * {
@@ -24,4 +31,8 @@ body {
   color: #fff;
   font-family: var(--font-sans);
   overflow-x: hidden;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
