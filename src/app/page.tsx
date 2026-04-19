@@ -41,16 +41,16 @@ const videos = [
 ];
 
 const uxuiProjects = [
-  { src: "/images/uxui/tososto.png",        label: "Tososto",       href: "/uxui" },
-  { src: "/images/uxui/600kids.png",         label: "600kids",       href: "/uxui" },
-  { src: "/images/uxui/leasehub.jpg",        label: "Leasehub",      href: "/uxui" },
-  { src: "/images/uxui/florian.jpg",         label: "Florian Zimmer",href: "/uxui" },
-  { src: "/images/uxui/staatstheater.png",   label: "Staatstheater", href: "/uxui" },
-  { src: "/images/uxui/jakob-admin.jpg",     label: "Jakob Admin",   href: "/uxui" },
-  { src: "/images/uxui/jakob-techniker.jpg", label: "Jakob App",     href: "/uxui" },
-  { src: "/images/uxui/qrmine-secondary.jpg",label: "QR Mine",       href: "/uxui" },
-  { src: "/images/uxui/evmoosburg.jpg",      label: "EV Moosburg",   href: "/uxui" },
-  { src: "/images/uxui/bout.jpg",            label: "Bout",          href: "/uxui" },
+  { src: "/images/uxui/tososto.png",        label: "Tososto",        href: "/uxui" },
+  { src: "/images/uxui/600kids.png",         label: "600kids",        href: "/uxui" },
+  { src: "/images/uxui/leasehub.jpg",        label: "Leasehub",       href: "/uxui" },
+  { src: "/images/uxui/florian.jpg",         label: "Florian Zimmer", href: "/uxui" },
+  { src: "/images/uxui/staatstheater.png",   label: "Staatstheater",  href: "/uxui" },
+  { src: "/images/uxui/jakob-admin.jpg",     label: "Jakob Admin",    href: "/uxui" },
+  { src: "/images/uxui/jakob-techniker.jpg", label: "Jakob App",      href: "/uxui" },
+  { src: "/images/uxui/qrmine-secondary.jpg",label: "QR Mine",        href: "/uxui" },
+  { src: "/images/uxui/evmoosburg.jpg",      label: "EV Moosburg",    href: "/uxui" },
+  { src: "/images/uxui/bout.jpg",            label: "Bout",           href: "/uxui" },
 ];
 
 const fotoCategories = [
@@ -67,14 +67,19 @@ export default function Home() {
       <main className="pt-[74px] bg-black">
 
         {/* ── Hero: CRISPY PIXELS. ── */}
-        <section className="px-6 md:px-12 pt-16 pb-10">
-          <h1 className="font-mono font-bold tracking-tight leading-none text-center mb-6"
-            style={{ fontSize: "clamp(2.5rem, 9vw, 5rem)" }}>
+        <section className="px-6 md:px-12 pt-20 pb-12 flex flex-col gap-4">
+          <h1
+            className="font-mono font-bold text-center leading-none tracking-[-0.02em]"
+            style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
+          >
             CRISPY PIXELS.
           </h1>
 
           {/* Geometric art container */}
-          <div className="relative w-full rounded-lg overflow-hidden bg-[#0d0d0d]" style={{ aspectRatio: "16/6" }}>
+          <div
+            className="relative w-full rounded-lg overflow-hidden"
+            style={{ aspectRatio: "16/6" }}
+          >
             <div className="absolute inset-0 flex">
               {/* Left: red circle-in-square */}
               <div className="flex-1 relative bg-black">
@@ -95,8 +100,8 @@ export default function Home() {
 
             {/* Play button */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-16 h-16 rounded-full border-2 border-white/50 flex items-center justify-center bg-black/20">
-                <svg viewBox="0 0 24 24" className="w-6 h-6 fill-white ml-0.5" aria-hidden="true">
+              <div className="w-20 h-20 rounded-full border-2 border-white/50 flex items-center justify-center bg-black/20">
+                <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white ml-1" aria-hidden="true">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
@@ -105,15 +110,17 @@ export default function Home() {
         </section>
 
         {/* ── Intro ── */}
-        <section className="px-6 md:px-12 py-16 md:py-24 flex flex-col md:flex-row gap-12 md:gap-20 items-start md:items-center border-t border-white/[0.06]">
-          <div className="flex-1 w-full min-w-0">
-            <p className="font-mono font-bold leading-tight tracking-tight"
-              style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>
+        <section className="px-6 md:px-12 py-20 flex flex-col md:flex-row gap-12 md:gap-20 items-start md:items-center border-t border-white/[0.06]">
+          <div className="flex-1 min-w-0 w-full">
+            <p
+              className="font-mono font-bold tracking-[-0.02em]"
+              style={{ fontSize: "clamp(2rem, 5vw, 4rem)", lineHeight: "1.25" }}
+            >
               FOTOS<br />VIDEOS<br />UX/UI
             </p>
           </div>
-          <div className="flex-1 w-full min-w-0">
-            <p className="font-sans text-base text-[#ccc] leading-7">
+          <div className="flex-1 min-w-0 w-full">
+            <p className="font-sans text-base text-[#ccc]" style={{ lineHeight: "28px" }}>
               Ich bin Michael Pzillas, freischaffender Mediendesigner und lebe in Frankfurt.
               Ich fühle mich in allen Bereichen der Kommunikation zu Hause, von Webentwicklung
               und UX/UI-Design bis hin zu Fotografie und Videoproduktion.
@@ -129,22 +136,29 @@ export default function Home() {
           <GallerySlider items={galleryImages} itemWidth={420} itemHeight={380} />
         </section>
 
-        {/* ── Videos ── */}
+        {/* 80 px spacer (Figma: "Abstand") */}
+        <div className="h-20" />
+
+        {/* ── Videos header ── */}
         <IllustrationHeader
           title="Videos"
           illustration="/images/illus-fotos-vector.svg"
           italic
         />
 
-        <section className="px-6 md:px-12 py-12 flex flex-col gap-16">
+        {/* ── Videos ── */}
+        <section className="px-6 md:px-12 py-12 flex flex-col gap-12">
           {videos.map((v, i) => (
-            <div key={i} className="flex flex-col md:flex-row gap-10 md:gap-16 items-center">
-              <div className="flex-1">
-                <div className="font-mono font-bold leading-tight tracking-tight text-white mb-5"
-                  style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)" }}>
+            <div key={i} className="flex flex-col md:flex-row gap-10 md:gap-12 items-start md:items-center">
+              {/* Text col — fixed 350 px on desktop, full width on mobile */}
+              <div className="w-full md:w-[350px] shrink-0">
+                <div
+                  className="font-mono font-bold tracking-[-0.01em] leading-tight text-white mb-4"
+                  style={{ fontSize: "clamp(1.25rem, 2.5vw, 2rem)" }}
+                >
                   {v.titleLines.map((line) => <p key={line}>{line}</p>)}
                 </div>
-                <p className="font-sans text-[#999] text-base leading-7 max-w-sm mb-5">
+                <p className="font-sans text-[#999] text-base mb-5" style={{ lineHeight: "24px" }}>
                   {v.description}
                 </p>
                 <a
@@ -156,19 +170,26 @@ export default function Home() {
                   Ansehen auf {v.platform} →
                 </a>
               </div>
-              <div className="w-full md:flex-1 relative rounded-lg overflow-hidden bg-white/5"
-                style={{ height: "320px" }}>
+
+              {/* Thumbnail — 550 × 340 px on desktop */}
+              <div
+                className="relative rounded-lg overflow-hidden bg-white/5 w-full md:w-[550px] shrink-0"
+                style={{ height: "340px" }}
+              >
                 <Image
                   src={v.image}
                   alt={v.titleLines.join(" ")}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 50vw"
+                  sizes="(max-width: 768px) 100vw, 550px"
                 />
               </div>
             </div>
           ))}
         </section>
+
+        {/* 80 px spacer */}
+        <div className="h-20" />
 
         {/* ── UX/UI ── */}
         <IllustrationHeader
@@ -178,6 +199,9 @@ export default function Home() {
         <section className="pb-10">
           <GallerySlider items={uxuiProjects} itemWidth={380} itemHeight={320} />
         </section>
+
+        {/* 80 px spacer */}
+        <div className="h-20" />
 
         {/* ── Fotografie ── */}
         <IllustrationHeader
@@ -189,21 +213,28 @@ export default function Home() {
           <GallerySlider items={fotoCategories} itemWidth={600} itemHeight={420} />
         </section>
 
+        {/* 80 px spacer */}
+        <div className="h-20" />
+
         {/* ── Testimonial ── */}
-        <section className="px-6 md:px-20 py-24 text-center border-t border-white/[0.06]">
-          <blockquote className="font-mono font-bold leading-tight tracking-tight max-w-3xl mx-auto mb-5"
-            style={{ fontSize: "clamp(1.5rem, 4vw, 3rem)" }}>
+        <section className="px-6 md:px-12 py-20 text-center border-t border-white/[0.06]">
+          <blockquote
+            className="font-mono font-bold tracking-[-0.02em] leading-tight max-w-3xl mx-auto mb-4"
+            style={{ fontSize: "clamp(1.5rem, 4vw, 4rem)" }}
+          >
             »SEHR SCHNELL, SEHR UNKOMPLIZIERT UND SEHR GUT GESTALTET.«
           </blockquote>
-          <cite className="font-sans text-[#555] text-sm not-italic">
+          <cite className="font-sans text-[#999] text-base not-italic">
             Sven, Salto Film UG
           </cite>
         </section>
 
         {/* ── Kontakt CTA ── */}
         <section className="px-6 md:px-12 py-16 border-t border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-8">
-          <p className="font-mono font-bold tracking-tight"
-            style={{ fontSize: "clamp(1.75rem, 4vw, 3rem)" }}>
+          <p
+            className="font-mono font-bold tracking-[-0.02em]"
+            style={{ fontSize: "clamp(1.75rem, 4vw, 3rem)" }}
+          >
             Bereit für beeindruckende Bilder?
           </p>
           <Link
