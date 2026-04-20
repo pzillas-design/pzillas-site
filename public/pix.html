@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>pix — sphäre · prototyp v9 · edge-scroll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:#000;color:#fff;font-family:'Space Grotesk',system-ui,sans-serif}
+
+  /* ═══════════════════ SCENE ═══════════════════ */
+  .scene{
+    position:fixed;inset:0;perspective:1000px;perspective-origin:50% 50%;
+    background:radial-gradient(ellipse at center,#0b0b0b 0%,#000 75%),#000;
+    overflow:hidden;touch-action:none;cursor:grab;
+    transition:filter 0.5s ease-out, transform 0.6s cubic-bezier(0.6,0,0.8,0.3);
+  }
+  .scene.dragging{cursor:grabbing}
+  .scene::after{
+    content:'';position:absolute;inset:0;pointer-events:none;z-index:90;
+    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.7) 100%);
+  }
+  .scene.diving{pointer-events:none;transform:scale(2.8);filter:blur(20px) brightness(0.3)}
+
+  /* ═══════════════════ WORLD ═══════════════════ */
+  .world{
+    position:absolute;top:50%;left:50%;width:0;height:0;
+    transform-style:preserve-3d;will-change:transform;
+  }
+
+  /* ═══════════════════ TILES ═══════════════════ */
+  .tile{
+    position:absolute;left:0;top:0;transform-style:flat;
+    backface-visibility:hidden;cursor:pointer;
+  }
+  .tile__card{
+    position:absolute;transform:translate(-50%,-50%);
+    overflow:hidden;border-radius:3px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.6);
+    transition:transform 0.11s cubic-bezier(0.2,0,0,1), box-shadow 0.11s ease-out;
+    will-change:transform;
+    background:#111;
+  }
+  .tile:hover .tile__card,
+  .tile--hov .tile__card{
+    transform:translate(-50%,-50%) scale(1.05);
+    z-index:10;
+  }
+  .tile__img{
+    width:100%;height:100%;display:block;object-fit:cover;
+  }
+  .tile__caption{
+    display:none;
+  }
+  /* Hero has no card chrome — override hover frame entirely */
+  .tile--hero:hover .tile__card{box-shadow:none;transform:translate(-50%,-50%) scale(1)}
+  .tile--hero:hover .tile__img{filter:none}
+  .tile__num{
+    position:absolute;top:7px;left:9px;
+    font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.02em;
+    color:rgba(255,255,255,0.85);background:rgba(0,0,0,0.5);
+    padding:3px 7px;border-radius:3px;backdrop-filter:blur(4px);
+  }
+
+  /* Ghost zone labels on sphere */
+  .zone-label__text{
+    position:absolute;transform:translate(-50%,-50%);
+    font-family:'Space Grotesk',sans-serif;font-weight:500;
+    font-size:72px;letter-spacing:-0.01em;
+    color:rgba(255,255,255,0.1);white-space:nowrap;
+    mix-blend-mode:screen;
+  }
+
+  /* Topic illustration SVGs — ghosted on sphere equator */
+  .zone-illus{
+    position:absolute;transform:translate(-50%,-50%);
+    width:1800px;pointer-events:none;
+    opacity:0.18;mix-blend-mode:screen;
+  }
+  .zone-illus img{width:100%;height:auto;display:block;}
+
+  /* ═══════════════════ HERO TILE (part of sphere — rotates with it) ═══════════════════ */
+  .tile--hero .tile__card{
+    width:1500px;height:560px;background:none;border-radius:0;
+    box-shadow:none;overflow:visible;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:36px;
+  }
+
+  .hero__logo{
+    width:1300px;height:auto;display:block;
+    filter:drop-shadow(0 4px 40px rgba(0,0,0,0.5));
+  }
+  .hero__sub{
+    font-family:'Space Grotesk',sans-serif;font-weight:400;font-size:66px;
+    letter-spacing:0.01em;color:rgba(255,255,255,0.55);
+  }
+  .hero__cta{
+    padding:28px 80px;
+    border:1px solid #fff;border-radius:999px;
+    font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:54px;
+    letter-spacing:0.01em;color:#000;
+    background:#fff;
+    cursor:pointer;transition:background 0.2s;
+    text-decoration:none;pointer-events:auto;
+  }
+  .hero__cta:hover{
+    background:rgba(255,255,255,0.82);
+  }
+
+  /* ═══════════════════ BREADCRUMB PILL NAV ═══════════════════ */
+  .pill-nav{
+    position:fixed;
+    left:50%;bottom:26px;
+    transform:translateX(-50%);
+    z-index:180;
+    display:flex;align-items:center;gap:2px;
+    padding:6px;
+    background:rgba(12,12,12,0.78);
+    backdrop-filter:blur(18px) saturate(1.4);
+    -webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:999px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition:opacity 0.3s, transform 0.4s cubic-bezier(0.2,0.9,0.3,1);
+  }
+  .pill-nav__item{
+    position:relative;
+    padding:12px 22px;
+    font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:14px;letter-spacing:0.01em;
+    color:rgba(255,255,255,0.55);
+    background:none;border:none;cursor:pointer;border-radius:999px;
+    transition:color 0.2s;
+    white-space:nowrap;
+  }
+  .pill-nav__item:hover{color:#fff}
+  .pill-nav__item.active{color:#000;z-index:2}
+  .pill-nav__indicator{
+    position:absolute;top:6px;left:6px;
+    height:calc(100% - 12px);
+    background:#fff;border-radius:999px;
+    transition:transform 0.4s cubic-bezier(0.4,1.3,0.4,1), width 0.4s cubic-bezier(0.4,1.3,0.4,1);
+    z-index:1;pointer-events:none;
+  }
+  .pill-nav__sep{
+    width:1px;height:14px;background:rgba(255,255,255,0.1);
+    margin:0 2px;
+  }
+  .pill-nav__meta{
+    padding:12px 16px 12px 20px;
+    font-family:'Space Grotesk',sans-serif;font-weight:400;font-size:13px;letter-spacing:0.01em;
+    color:rgba(255,255,255,0.4);
+    display:flex;align-items:center;gap:8px;
+  }
+  .pill-nav__meta b{color:rgba(255,255,255,0.9);font-weight:500}
+
+  .detail.open ~ .pill-nav{opacity:0;transform:translateX(-50%) translateY(20px);pointer-events:none}
+
+  /* Top HUD removed for minimal UI */
+  .hud-top{display:none !important}
+
+  /* ═══════════════════ PORTAL FLASH ═══════════════════ */
+  .portal-flash{
+    position:fixed;inset:0;z-index:250;pointer-events:none;
+    background:radial-gradient(circle at center,rgba(255,255,255,0.95) 0%,rgba(255,255,255,0) 20%);
+    opacity:0;mix-blend-mode:screen;
+  }
+  .portal-flash.flash{animation:portal-flash 900ms cubic-bezier(0.2,0.9,0.3,1) forwards}
+  @keyframes portal-flash{
+    0%{opacity:0;transform:scale(0.05)}
+    40%{opacity:0.4}
+    100%{opacity:0;transform:scale(8)}
+  }
+
+  /* ═══════════════════ DETAIL VIEW ═══════════════════ */
+  .detail{
+    position:fixed;inset:0;z-index:300;background:#000;
+    overflow-y:auto;overflow-x:hidden;
+    opacity:0;pointer-events:none;
+    transition:opacity 0.5s ease-out 0.3s;
+  }
+  .detail.open{opacity:1;pointer-events:auto}
+  .detail__back{
+    position:fixed;top:22px;left:22px;z-index:400;
+    font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:14px;letter-spacing:0.01em;
+    color:rgba(255,255,255,0.65);
+    background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.12);border-radius:999px;
+    padding:12px 20px;cursor:pointer;transition:all 0.15s;
+  }
+  .detail__back:hover{color:#fff;background:rgba(0,0,0,0.85);border-color:rgba(255,255,255,0.4)}
+
+  .detail__hero{width:100%;height:66vh;min-height:420px;position:relative;background:#080808;overflow:hidden}
+  .detail__hero img{width:100%;height:100%;object-fit:cover}
+  .detail__hero::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,0.85) 100%)}
+  .detail__title-block{position:absolute;left:0;right:0;bottom:48px;padding:0 48px;z-index:2}
+  .detail__kicker{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:14px;letter-spacing:0.02em;color:rgba(255,255,255,0.65);}
+  .detail__title{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:clamp(3rem,8vw,7rem);letter-spacing:-0.03em;line-height:0.95;margin-top:18px}
+  .detail__body{max-width:1100px;margin:0 auto;padding:80px 48px 120px}
+  .detail__intro{display:grid;grid-template-columns:1fr 2fr;gap:60px;padding-bottom:60px;border-bottom:1px solid rgba(255,255,255,0.08)}
+  .detail__meta{display:flex;flex-direction:column;gap:20px;font-family:'Space Grotesk',sans-serif;font-weight:400;font-size:14px;letter-spacing:0.01em;color:rgba(255,255,255,0.5);}
+  .detail__meta span{display:block;color:#fff;font-size:17px;font-weight:500;margin-top:4px;letter-spacing:0.01em}
+  .detail__desc{font-size:19px;line-height:1.65;color:rgba(255,255,255,0.85)}
+  .detail__desc p+p{margin-top:20px}
+  .detail__gallery{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:60px}
+  .detail__gallery img{width:100%;height:100%;object-fit:cover;display:block;border-radius:2px}
+  .detail__gallery .span-2{grid-column:span 2}
+  .detail__gallery .span-3{grid-column:span 3}
+  .detail__gallery .span-4{grid-column:span 4}
+  .detail__gallery .span-6{grid-column:span 6}
+  .detail__gallery .tall{aspect-ratio:3/4}
+  .detail__gallery .wide{aspect-ratio:16/9}
+  .detail__gallery .square{aspect-ratio:1/1}
+
+  /* ═══════════════════ SENSOR UI (hand tracking + gyroscope) ═══════════════════ */
+  .sensor-bar{
+    position:fixed;right:22px;top:60px;z-index:220;
+    display:flex;flex-direction:column;gap:8px;align-items:flex-end;
+  }
+  .sensor-btn{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 14px;border-radius:999px;
+    background:rgba(12,12,12,0.78);
+    backdrop-filter:blur(14px) saturate(1.4);
+    -webkit-backdrop-filter:blur(14px) saturate(1.4);
+    border:1px solid rgba(255,255,255,0.08);
+    font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:14px;letter-spacing:0.01em;
+    color:rgba(255,255,255,0.7);
+    cursor:pointer;transition:all 0.2s;
+  }
+  .sensor-btn:hover{color:#fff;border-color:rgba(255,255,255,0.25)}
+  .sensor-btn.on{color:#000;background:#fff;border-color:#fff}
+  .sensor-btn__dot{
+    width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25);
+    transition:background 0.2s;
+  }
+  .sensor-btn.on .sensor-btn__dot{background:#22c55e}
+
+  /* Hidden webcam */
+  #webcam{position:fixed;width:1px;height:1px;opacity:0;pointer-events:none}
+
+  /* Hand overlay — minimal dots only */
+  #hand-canvas{
+    position:fixed;inset:0;pointer-events:none;z-index:195;
+  }
+
+  /* Finger cursor — unused in hand mode (we draw dots on canvas instead) */
+  .finger-cursor{display:none !important}
+  .deadzone{display:none !important}
+
+  /* When hand tracking is active: hide the mouse cursor and kill hover effects
+     on tiles (so the physical mouse cursor can't fire a hover while the hand is
+     the real pointer). Hero is already hover-immune above. */
+  body.hand-on{cursor:none}
+  body.hand-on .tile:hover .tile__card{
+    transform:translate(-50%,-50%) scale(1);
+    box-shadow:0 12px 40px rgba(0,0,0,0.6);
+    z-index:auto;
+  }
+  body.hand-on .tile:hover .tile__img{filter:none}
+  body.hand-on .tile:hover .tile__caption{opacity:0}
+  body.hand-on .hero__cta:hover{
+    background:transparent;color:rgba(255,255,255,0.95);
+    border-color:rgba(255,255,255,0.35);
+  }
+  @media (max-width:720px){
+    .tile--hero .tile__card{width:680px;height:300px}
+    .hero__logo{width:600px}
+    .hero__sub{font-size:17px}
+    .hero__cta{padding:13px 24px;font-size:15px}
+    .pill-nav__item{padding:10px 14px;font-size:13px;letter-spacing:0.01em}
+    .pill-nav__meta{display:none}
+    .sensor-bar{right:14px;top:52px}
+    .sensor-btn{font-size:13px;padding:9px 14px}
+    .detail__title-block{padding:0 22px;bottom:28px}
+    .detail__body{padding:48px 22px 80px}
+    .detail__intro{grid-template-columns:1fr;gap:30px}
+    .detail__gallery{grid-template-columns:repeat(2,1fr);gap:6px}
+    .detail__gallery .span-2,.detail__gallery .span-3,.detail__gallery .span-4,.detail__gallery .span-6{grid-column:span 2}
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <div class="world" id="world"></div>
+</div>
+
+<!-- Top HUD -->
+<div class="hud-top hud-top--l hud-top__sig" id="hudTl">pix <span>/ 001</span></div>
+<div class="hud-top hud-top--r" id="hudTr">v9 · edge-scroll</div>
+
+<!-- Sensor toggles -->
+<div class="sensor-bar">
+  <button class="sensor-btn" id="btnHand"><span class="sensor-btn__dot"></span>hand tracking</button>
+  <button class="sensor-btn" id="btnGyro"><span class="sensor-btn__dot"></span>gyroskop</button>
+</div>
+
+<!-- Hand tracking overlays -->
+<video id="webcam" autoplay playsinline muted></video>
+<canvas id="hand-canvas"></canvas>
+<div class="finger-cursor" id="fingerCursor"><div class="finger-cursor__ring"></div></div>
+<div class="deadzone" id="deadzone"></div>
+
+<!-- Sticky breadcrumb pill nav -->
+<nav class="pill-nav" id="pillNav">
+  <div class="pill-nav__indicator" id="pillInd"></div>
+  <button class="pill-nav__item active" data-zone="center">hello</button>
+  <button class="pill-nav__item" data-zone="foto">fotografie</button>
+  <button class="pill-nav__item" data-zone="ux">ux/ui</button>
+  <button class="pill-nav__item" data-zone="video">video</button>
+  <button class="pill-nav__item" data-zone="kontakt">kontakt</button>
+  <div class="pill-nav__sep"></div>
+  <div class="pill-nav__meta"><b id="pillCount">12</b> projekte</div>
+</nav>
+
+<!-- Portal flash for event horizon -->
+<div class="portal-flash" id="portalFlash"></div>
+
+<!-- Detail view -->
+<div class="detail" id="detail">
+  <button class="detail__back" id="detailBack">← zurück</button>
+  <div class="detail__hero">
+    <img id="detailHeroImg" src="" alt="">
+    <div class="detail__title-block">
+      <div class="detail__kicker" id="detailKicker"></div>
+      <h1 class="detail__title" id="detailTitle"></h1>
+    </div>
+  </div>
+  <div class="detail__body">
+    <div class="detail__intro">
+      <div class="detail__meta" id="detailMeta"></div>
+      <div class="detail__desc" id="detailDesc"></div>
+    </div>
+    <div class="detail__gallery" id="detailGallery"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const R = 1600;
+
+  // ═══ Image pool by zone — lokale Bilder ═══
+  const POOLS = {
+    foto: [
+      'images/immo/asset-1.webp','images/immo/asset-2.webp','images/immo/asset-3.webp',
+      'images/immo/asset-4.webp','images/immo/asset-5.webp','images/immo/asset-6.webp',
+      'images/immo/asset-19.webp',
+    ],
+    ux: [
+      'images/uxui/asset-2.webp','images/uxui/asset-3.webp','images/uxui/asset-4.webp',
+      'images/uxui/asset-5.webp','images/uxui/asset-6.webp','images/uxui/asset-7.webp',
+    ],
+    video: [
+      'images/misc/asset-1.webp','images/misc/asset-2.webp','images/misc/asset-3.webp',
+      'images/misc/asset-4.webp','images/misc/asset-5.webp','images/misc/asset-6.webp',
+      'images/misc/asset-7.webp','images/misc/asset-8.webp','images/misc/asset-10.webp',
+      'images/misc/asset-11.webp','images/misc/asset-12.webp','images/misc/asset-13.webp',
+    ],
+    kontakt: [
+      'images/events/events-1.webp','images/events/events-2.webp',
+      'images/events/events-3.webp','images/events/events-4.webp',
+      'images/events/asset-1.webp','images/events/asset-2.webp',
+    ],
+  };
+
+  // ═══ Project detail data ═══
+  const PROJECTS = {
+    expose:{title:'exposé',kicker:'№ 001 · fotografie · 2024',zone:'foto',
+      meta:[['jahr','2024'],['ort','frankfurt'],['tag','architektur']],
+      desc:['Eine Foto-Serie über Architektur in Frankfurt — Lebensräume meisterhaft inszeniert, Licht als Medium, Raum als Thema.','Entstanden über zwölf Wochen im Sommer 2024. Analog auf Kodak Portra 400, digital auf Fujifilm X-T5.'],
+      heroImg:'images/immo/asset-1.webp',
+      gallery:[{src:'images/immo/asset-2.webp',span:3,aspect:'wide'},{src:'images/immo/asset-3.webp',span:3,aspect:'wide'},{src:'images/immo/asset-4.webp',span:2,aspect:'tall'},{src:'images/immo/asset-5.webp',span:2,aspect:'tall'},{src:'images/immo/asset-6.webp',span:2,aspect:'tall'},{src:'images/immo/asset-19.webp',span:6,aspect:'wide'}]},
+    tide:{title:'tide',kicker:'№ 002 · fotografie · 2023',zone:'foto',
+      meta:[['jahr','2023'],['ort','osthafen'],['tag','reportage']],
+      desc:['Reportage aus dem Frankfurter Osthafen. Langzeitbelichtungen zwischen Industrie und Fluss.'],
+      heroImg:'images/events/events-1.webp',
+      gallery:[{src:'images/events/events-2.webp',span:2,aspect:'square'},{src:'images/events/events-3.webp',span:2,aspect:'square'},{src:'images/events/events-4.webp',span:2,aspect:'square'}]},
+    stiftung:{title:'stiftung',kicker:'№ 003 · fotografie · 2022',zone:'foto',
+      meta:[['jahr','2022'],['tag','portrait']],desc:['Portraitreihe einer Kulturstiftung — acht Gesichter, acht Geschichten.'],
+      heroImg:'images/events/asset-1.webp',gallery:[]},
+    nacht:{title:'nacht',kicker:'№ 004 · fotografie · 2022',zone:'foto',
+      meta:[['jahr','2022'],['tag','serie']],desc:['Langzeitbelichtungen zwischen 1 und 4 Uhr morgens.'],
+      heroImg:'images/events/asset-2.webp',gallery:[]},
+    fimed:{title:'fimed',kicker:'№ 006 · ux/ui · 2024',zone:'ux',
+      meta:[['jahr','2024'],['kunde','med-tech'],['rolle','design & prototyping']],
+      desc:['Diagnostic Dashboard für ein Labor-Informationssystem.','IEC 62366 Usability-Engineering. 140+ Komponenten.'],
+      heroImg:'images/uxui/asset-2.webp',gallery:[{src:'images/uxui/asset-3.webp',span:3,aspect:'wide'},{src:'images/uxui/asset-4.webp',span:3,aspect:'wide'}]},
+    nordic:{title:'nordic',kicker:'№ 007 · ux/ui · 2023',zone:'ux',
+      meta:[['jahr','2023'],['kunde','e-commerce'],['impact','+128% cvr']],
+      desc:['Shop-Redesign. Von 2.1% auf 4.8% Conversion. Editorial statt Raster.'],
+      heroImg:'images/uxui/asset-5.webp',gallery:[]},
+    trend:{title:'trend',kicker:'№ 008 · ux/ui · 2023',zone:'ux',
+      meta:[['jahr','2023'],['tag','data viz']],desc:['Datendichte Dashboards für einen Börsen-Analyseservice.'],
+      heroImg:'images/uxui/asset-6.webp',gallery:[]},
+    kiosk:{title:'kiosk',kicker:'№ 009 · ux/ui · 2022',zone:'ux',
+      meta:[['jahr','2022']],desc:['Touch-UI für Point-of-Sale Terminals.'],
+      heroImg:'images/uxui/asset-7.webp',gallery:[]},
+    roket:{title:'roket',kicker:'№ 010 · video · 2024',zone:'video',
+      meta:[['jahr','2024'],['format','imagefilm'],['rolle','konzept · regie · schnitt']],
+      desc:['Imagefilm für ein Industrie-Startup.'],
+      heroImg:'images/misc/asset-1.webp',gallery:[{src:'images/misc/asset-2.webp',span:3,aspect:'wide'},{src:'images/misc/asset-3.webp',span:3,aspect:'wide'}]},
+    labor:{title:'mein labor',kicker:'№ 011 · video · 2023',zone:'video',
+      meta:[['jahr','2023'],['format','doku-serie']],desc:['Fünfteilige Doku über Kleinst-Labore in Deutschland.'],
+      heroImg:'images/misc/asset-4.webp',gallery:[]},
+    dreissig:{title:'30 tage',kicker:'№ 012 · video · 2023',zone:'video',
+      meta:[['jahr','2023']],desc:['Content-Serie. Tägliche Mikro-Dokumentation.'],
+      heroImg:'images/misc/asset-5.webp',gallery:[]},
+    werkstatt:{title:'werkstatt',kicker:'№ 013 · video · 2021',zone:'video',
+      meta:[['jahr','2021']],desc:['Hinter-den-Kulissen-Serie.'],
+      heroImg:'images/misc/asset-6.webp',gallery:[]},
+  };
+
+  // ═══ Seeded RNG ═══
+  function srng(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280}}
+  const rnd = srng(137);
+
+  // Front-focused IMAX-style tiling: dense front hemisphere, sparse/empty behind.
+  // Each band gets a yaw spread centered at 0°. Tiles fill that arc only — the back
+  // stays free on purpose, so the first view feels full & cinematic and the rest
+  // can fill over time.
+  const BANDS = [
+    { phi: -62, n: 5, spread: 205 },
+    { phi: -26, n: 5, spread: 215 },
+    { phi:  26, n: 5, spread: 215 },
+    { phi:  62, n: 5, spread: 205 },
+  ];
+
+  const TILES = [];
+  // Hero anchored to sphere at front (0,0) — rotates with world, NOT fixed overlay
+  TILES.push({ type:'hero', theta:0, phi:0 });
+
+  // Rhythmic shape cycle, offset per band index so rows don't align
+  const SHAPE_SEQ = ['L','P','S','L','P','S','L','P','S','L','P','S'];
+  // Sizes chosen so angular footprint stays smaller than band/yaw step → no overlap
+  const SIZES = {
+    L: { w: 720, h: 480 },
+    P: { w: 480, h: 720 },
+    S: { w: 600, h: 600 },
+  };
+
+  // Project anchors — all inside the front arc so everything sits in the IMAX view.
+  const ZONE_ANCHORS = [
+    { zone:'foto',  yaw:  0,   pitch:  28, projs:['expose','tide','stiftung','nacht'] },
+    { zone:'ux',    yaw:  70,  pitch:   0, projs:['fimed','nordic','trend','kiosk'] },
+    { zone:'video', yaw: -70,  pitch: -28, projs:['roket','labor','dreissig','werkstatt'] },
+  ];
+
+  // First, lay out photo tiles on the sphere
+  const photoTiles = [];
+  let globalIdx = 0;
+
+  BANDS.forEach((band, bandIdx) => {
+    // Spread tiles across band.spread° centered at yaw=0 (front).
+    const stepTh = band.spread / band.n;
+    // Brick-offset alternate bands by half a step
+    const offset = (bandIdx % 2 === 0) ? 0 : stepTh / 2;
+    const startTh = -band.spread / 2 + stepTh / 2;
+
+    for (let i = 0; i < band.n; i++) {
+      // Clean grid — no jitter so tiles sit on an exact lat/long lattice and
+      // never overlap each other at the chosen size.
+      const th = startTh + i * stepTh + offset;
+      const ph = band.phi;
+
+      // Skip slots too close to hero (center front) — hero occupies that space
+      const thNorm = ((th + 540) % 360) - 180;
+      if (Math.hypot(thNorm, ph) < 26) continue;
+
+      // Shape from sequence, shifted per band for staggered look
+      const shape = SHAPE_SEQ[(globalIdx + bandIdx * 2) % SHAPE_SEQ.length];
+      const sz = SIZES[shape];
+
+      photoTiles.push({
+        type: 'img',
+        theta: th, phi: ph,
+        w: sz.w, h: sz.h,
+        _idx: globalIdx,
+      });
+      globalIdx++;
+    }
+  });
+
+  // Assign zone + image based on nearest anchor; also promote closest to project cover
+  const angDist = (y1, p1, y2, p2) => {
+    let dy = Math.abs(y1 - y2); dy = Math.min(dy, 360 - dy);
+    return Math.hypot(dy, p1 - p2);
+  };
+
+  // For each anchor, pick the 1 closest tile and make it the project cover
+  ZONE_ANCHORS.forEach(a => {
+    const sorted = photoTiles
+      .filter(t => !t._projAssigned)
+      .map(t => ({ t, d: angDist(t.theta, t.phi, a.yaw, a.pitch) }))
+      .sort((x, y) => x.d - y.d);
+
+    a.projs.forEach((projId, i) => {
+      if (!sorted[i]) return;
+      const t = sorted[i].t;
+      t._projAssigned = true;
+      t.type = 'project';
+      t.proj = projId;
+      t.n = String(Object.keys(PROJECTS).indexOf(projId) + 1).padStart(3, '0');
+    });
+  });
+
+  // Assign zone (nearest anchor) for image pool selection
+  photoTiles.forEach(t => {
+    let best = ZONE_ANCHORS[0], bestD = Infinity;
+    ZONE_ANCHORS.forEach(a => {
+      const d = angDist(t.theta, t.phi, a.yaw, a.pitch);
+      if (d < bestD) { bestD = d; best = a; }
+    });
+    t.zone = best.zone;
+    const pool = POOLS[best.zone];
+    t.img = pool[t._idx % pool.length];
+  });
+
+  TILES.push(...photoTiles);
+
+  // Zone labels removed — equator is reserved for SVG illustrations only
+
+  // Topic illustrations — ghosted SVGs on the equator (foto omitted — logo is there)
+  [
+    { theta:  70, phi: 0, src: 'images/illus/uxui.svg'  },
+    { theta: -70, phi: 0, src: 'images/illus/video.svg' },
+  ].forEach(z => TILES.push({ type:'illus', theta:z.theta, phi:z.phi, src:z.src }));
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RENDER TILES INTO WORLD
+  // ═══════════════════════════════════════════════════════════════════════════
+  const world = document.getElementById('world');
+  const scene = document.getElementById('scene');
+  const deg2rad = Math.PI / 180;
+  const tileEls = [];
+
+  TILES.forEach(t => {
+    const wrap = document.createElement('div');
+    wrap.className = 'tile';
+    wrap.style.transform = `rotateY(${t.theta}deg) rotateX(${-t.phi}deg) translateZ(-${R}px)`;
+    const th = t.theta * deg2rad, ph = t.phi * deg2rad;
+    t._dir = { x:-Math.cos(ph)*Math.sin(th), y:-Math.sin(ph), z:-Math.cos(ph)*Math.cos(th) };
+
+    let html = '';
+    if (t.type === 'illus') {
+      html = `<div class="zone-illus"><img src="${t.src}" alt=""></div>`;
+      wrap.style.cursor = 'default';
+    } else if (t.type === 'zone') {
+      html = `<div class="zone-label__text">${t.text}</div>`;
+      wrap.style.cursor = 'default';
+    } else if (t.type === 'hero') {
+      wrap.classList.add('tile--hero');
+      html = `
+        <div class="tile__card">
+          <svg class="hero__logo" viewBox="0 0 1043 209" xmlns="http://www.w3.org/2000/svg" fill="none">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M1043 0.000976562L834.821 104.001L1043 208.001H929.357L778 132.386L626.643 208.001H513L721.178 104.001L513 0.000976562H626.644L778 75.6144L929.356 0.000976562H1043Z" fill="white"/>
+            <path d="M527 0.00195312V208.002H467V0.00195312H527Z" fill="white"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M60 208.002H0V0.00240409L298.197 0.00240409C366.639 0.0247694 480 -1.99078 480 70.5062C480 143.003 363.677 141.021 298.197 141.003H60V208.002ZM60 101.003V40.0094H298.197C332.583 41.2345 420 38.0057 420 70.5024C420 102.999 335.866 102.157 298.197 101.003H60Z" fill="white"/>
+          </svg>
+          <div class="hero__sub">Design Studio Frankfurt</div>
+          <a href="mailto:hallo@pix.de" class="hero__cta">hallo@pix.de</a>
+        </div>`;
+    } else {
+      const isProject = t.type === 'project';
+      html = `
+        <div class="tile__card" style="width:${t.w}px;height:${t.h}px;">
+          <img class="tile__img" src="${t.img}" loading="lazy" alt="">
+          ${isProject ? `<div class="tile__num">${t.n}</div>` : ''}
+          ${t.proj ? `<div class="tile__caption">${PROJECTS[t.proj].title}</div>` : ''}
+        </div>`;
+      if (t.proj) {
+        wrap.dataset.proj = t.proj;
+        wrap.addEventListener('click', (e) => {
+          if (didDrag) return;   // suppress click after drag
+          e.stopPropagation();
+          openDetail(t.proj);
+        });
+      } else {
+        wrap.style.cursor = 'default';
+      }
+    }
+    wrap.innerHTML = html;
+    world.appendChild(wrap);
+    tileEls.push({ el: wrap, data: t });
+  });
+
+  // Update project count in nav
+  const projTiles = TILES.filter(t => t.type === 'project').length;
+  document.getElementById('pillCount').textContent = Object.keys(PROJECTS).length;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CAMERA
+  // ═══════════════════════════════════════════════════════════════════════════
+  let yaw = 0, pitch = 0;
+  let tYaw = 0, tPitch = 0;
+  let vYaw = 0, vPitch = 0;
+  let camVYaw = 0, camVPitch = 0;  // spring velocity
+
+  function snapToNearestTile() {
+    let best = null, bestD = Infinity;
+    TILES.forEach(t => {
+      if (t.type !== 'img' && t.type !== 'project') return;
+      const dy = ((tYaw - t.theta + 540) % 360) - 180;
+      const dp = tPitch - t.phi;
+      const d = Math.hypot(dy, dp);
+      if (d < bestD) { bestD = d; best = t; }
+    });
+    if (best) {
+      const dy = ((best.theta - tYaw + 540) % 360) - 180;
+      tYaw += dy;
+      tPitch = best.phi;
+    }
+  }
+
+  function render() {
+    tPitch = Math.max(-82, Math.min(82, tPitch));
+
+    // Underdamped spring — K=0.10 stiffness, D=0.72 damping → bouncy overshoot
+    camVYaw  += (tYaw   - yaw)   * 0.10;
+    camVPitch += (tPitch - pitch) * 0.10;
+    camVYaw  *= 0.72;
+    camVPitch *= 0.72;
+    yaw   += camVYaw;
+    pitch += camVPitch;
+
+    world.style.transform = `rotateX(${-pitch}deg) rotateY(${-yaw}deg)`;
+
+    // Culling
+    const yR = yaw * deg2rad, pR = pitch * deg2rad;
+    const lookX = -Math.sin(yR) * Math.cos(pR);
+    const lookY =  Math.sin(pR);
+    const lookZ = -Math.cos(yR) * Math.cos(pR);
+
+    for (let i = 0; i < tileEls.length; i++) {
+      const { el, data } = tileEls[i];
+      if (!data._dir) continue;
+      const dot = data._dir.x * lookX + data._dir.y * lookY + data._dir.z * lookZ;
+      el.style.visibility = dot > -0.15 ? 'visible' : 'hidden';
+    }
+
+    // Pill nav — auto-detect current zone from yaw
+    updateActiveZone();
+
+    applyEdgeScroll();
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INPUT — drag only
+  // ═══════════════════════════════════════════════════════════════════════════
+  let dragging = false, dragStart = null, didDrag = false;
+
+  // ── Mouse edge-scroll ──────────────────────────────────────
+  let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+  let mouseInWin = false;
+  document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; mouseInWin = true; });
+  document.addEventListener('mouseleave', () => { mouseInWin = false; });
+
+  function applyEdgeScroll() {
+    if (dragging || detailOpen || !mouseInWin) return;
+    const W = window.innerWidth, H = window.innerHeight;
+    const EDGE = 0.20, SPD = 1.1;
+    const xN = mouseX / W, yN = mouseY / H;
+    if (xN < EDGE)       tYaw  += Math.pow((EDGE - xN) / EDGE, 2) * SPD;
+    else if (xN > 1-EDGE) tYaw  -= Math.pow((xN - (1-EDGE)) / EDGE, 2) * SPD;
+    if (yN < EDGE)       tPitch -= Math.pow((EDGE - yN) / EDGE, 2) * SPD;
+    else if (yN > 1-EDGE) tPitch += Math.pow((yN - (1-EDGE)) / EDGE, 2) * SPD;
+  }
+
+  let lastX = 0, lastY = 0;
+
+  scene.addEventListener('pointerdown', (e) => {
+    dragging = true; didDrag = false;
+    dragStart = { x: e.clientX, y: e.clientY };
+    lastX = e.clientX; lastY = e.clientY;
+    vYaw = 0; vPitch = 0;
+    scene.classList.add('dragging');
+    // no pointer capture — lets clicks reach tile elements naturally
+  });
+  scene.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    if (!didDrag && Math.hypot(e.clientX - dragStart.x, e.clientY - dragStart.y) > 6) didDrag = true;
+    const S = 0.09;  // gentler — mouse travels ~half of the content (grab-pan feel)
+    // Grab-pan: drag right → content follows right. Drag down → content follows down.
+    const dYaw = dx * S, dPitch = -dy * S;  // flip Y so up/down feels correct
+    tYaw += dYaw; tPitch += dPitch;
+    yaw += dYaw * 0.75; pitch += dPitch * 0.75;
+    vYaw = dYaw * 0.4; vPitch = dPitch * 0.4;
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    scene.classList.remove('dragging');
+    try { scene.releasePointerCapture(e.pointerId); } catch(_){}
+    // Project forward by inertia, then snap to nearest tile
+    tYaw   += vYaw * 5;
+    tPitch += vPitch * 5;
+    vYaw = 0; vPitch = 0;
+    snapToNearestTile();
+  }
+  scene.addEventListener('pointerup', endDrag);
+  scene.addEventListener('pointercancel', endDrag);
+  scene.addEventListener('click', (e) => {
+    if (didDrag) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+  // Keyboard
+  window.addEventListener('keydown', (e) => {
+    if (detailOpen) { if (e.key === 'Escape') closeDetail(); return; }
+    const s = 10;
+    if (e.key === 'ArrowLeft')  tYaw -= s;
+    else if (e.key === 'ArrowRight') tYaw += s;
+    else if (e.key === 'ArrowUp')    tPitch += s;
+    else if (e.key === 'ArrowDown')  tPitch -= s;
+    else if (e.key === '0') gotoZone('center');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PILL NAV
+  // ═══════════════════════════════════════════════════════════════════════════
+  const pillNav = document.getElementById('pillNav');
+  const pillInd = document.getElementById('pillInd');
+  const pillItems = Array.from(pillNav.querySelectorAll('.pill-nav__item'));
+
+  const ZONES = {
+    center:  { yaw: 0,    pitch: 0 },
+    foto:    { yaw: 0,    pitch: 26 },
+    ux:      { yaw: 108,  pitch: 0 },
+    video:   { yaw: 216,  pitch: -26 },
+    kontakt: { yaw: -108, pitch: 0 },
+  };
+  function gotoZone(name) {
+    const z = ZONES[name]; if (!z) return;
+    tYaw = z.yaw; tPitch = z.pitch; vYaw = 0; vPitch = 0;
+  }
+  pillItems.forEach(item => {
+    item.addEventListener('click', () => gotoZone(item.dataset.zone));
+  });
+
+  function updateActiveZone() {
+    // Determine which zone the camera is currently looking at
+    let nearest = 'center';
+    let bestDist = Infinity;
+    const zones = { center:{yaw:0,pitch:0}, foto:{yaw:0,pitch:26}, ux:{yaw:108,pitch:0}, video:{yaw:216,pitch:-26}, kontakt:{yaw:-108,pitch:0} };
+    for (const [k, v] of Object.entries(zones)) {
+      let dy = Math.min(Math.abs(yaw - v.yaw), 360 - Math.abs(yaw - v.yaw));
+      let dp = Math.abs(pitch - v.pitch);
+      const d = Math.hypot(dy, dp);
+      if (d < bestDist) { bestDist = d; nearest = k; }
+    }
+    // If far from any zone, stay on "center"
+    if (bestDist > 45 && nearest !== 'center') nearest = 'center';
+
+    if (currentZone !== nearest) {
+      currentZone = nearest;
+      pillItems.forEach(it => it.classList.toggle('active', it.dataset.zone === nearest));
+      positionPillIndicator();
+    }
+  }
+  let currentZone = 'center';
+
+  function positionPillIndicator() {
+    const active = pillNav.querySelector('.pill-nav__item.active');
+    if (!active) return;
+    const navRect = pillNav.getBoundingClientRect();
+    const aRect = active.getBoundingClientRect();
+    pillInd.style.width = aRect.width + 'px';
+    pillInd.style.transform = `translateX(${aRect.left - navRect.left - 6}px)`;
+  }
+  window.addEventListener('load', () => setTimeout(positionPillIndicator, 50));
+  window.addEventListener('resize', positionPillIndicator);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EVENT HORIZON → DETAIL
+  // ═══════════════════════════════════════════════════════════════════════════
+  const portalFlash = document.getElementById('portalFlash');
+  const detail = document.getElementById('detail');
+  const detailHeroImg = document.getElementById('detailHeroImg');
+  const detailKicker = document.getElementById('detailKicker');
+  const detailTitle = document.getElementById('detailTitle');
+  const detailMeta = document.getElementById('detailMeta');
+  const detailDesc = document.getElementById('detailDesc');
+  const detailGallery = document.getElementById('detailGallery');
+  const detailBack = document.getElementById('detailBack');
+  const hudTl = document.getElementById('hudTl');
+  const hudTr = document.getElementById('hudTr');
+
+  let detailOpen = false;
+
+  function openDetail(projId) {
+    if (detailOpen) return;
+    const p = PROJECTS[projId];
+    if (!p) return;
+
+    detailHeroImg.src = p.heroImg;
+    detailHeroImg.alt = p.title;
+    detailKicker.textContent = p.kicker;
+    detailTitle.textContent = p.title + '.';
+    detailMeta.innerHTML = p.meta.map(([k, v]) => `<div>${k}<span>${v}</span></div>`).join('');
+    detailDesc.innerHTML = p.desc.map(d => `<p>${d}</p>`).join('');
+    detailGallery.innerHTML = p.gallery.length
+      ? p.gallery.map(g => `<div class="span-${g.span} ${g.aspect||''}"><img src="${g.src}" loading="lazy" alt=""></div>`).join('')
+      : '<div class="span-6" style="color:rgba(255,255,255,0.4);font-family:Space Grotesk,sans-serif;font-size:13px;letter-spacing:0.02em;text-align:center;padding:40px">— galerie in vorbereitung —</div>';
+    detail.scrollTop = 0;
+
+    scene.classList.add('diving');
+    portalFlash.classList.add('flash');
+    hudTl.classList.add('fade-out');
+    hudTr.classList.add('fade-out');
+
+    setTimeout(() => {
+      detail.classList.add('open');
+      detailOpen = true;
+      if (history.pushState) history.pushState({ proj: projId }, '', '#' + projId);
+    }, 450);
+    setTimeout(() => portalFlash.classList.remove('flash'), 1000);
+  }
+
+  function closeDetail() {
+    if (!detailOpen) return;
+    detailOpen = false;
+    detail.classList.remove('open');
+    setTimeout(() => {
+      scene.classList.remove('diving');
+      hudTl.classList.remove('fade-out');
+      hudTr.classList.remove('fade-out');
+      if (history.pushState) history.pushState({}, '', '#');
+    }, 400);
+  }
+
+  detailBack.addEventListener('click', closeDetail);
+  window.addEventListener('popstate', () => { if (detailOpen) closeDetail(); });
+
+  window.addEventListener('load', () => {
+    const hash = location.hash.slice(1);
+    if (hash && PROJECTS[hash]) setTimeout(() => openDetail(hash), 400);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HAND TRACKING (MediaPipe) — joystick-style: finger position drives rotation
+  // ═══════════════════════════════════════════════════════════════════════════
+  const btnHand = document.getElementById('btnHand');
+  const fingerCursor = document.getElementById('fingerCursor');
+  const deadzoneEl = document.getElementById('deadzone');
+  const handCanvas = document.getElementById('hand-canvas');
+  const handCtx = handCanvas.getContext('2d');
+  const webcam = document.getElementById('webcam');
+
+  let handActive = false;
+  let handCamera = null, handModel = null;  // MediaPipe refs (so we can stop them)
+  let handTargetX = null, handTargetY = null;  // raw fingertip screen pos (per-frame)
+  let handSmoothX = null, handSmoothY = null;  // smoothed pos (joystick input)
+  let handDispX = null, handDispY = null;       // heavily smoothed (cursor dot display)
+  let handThumbDispX = null, handThumbDispY = null; // thumb dot display
+  let handTargetThumbX = null, handTargetThumbY = null;
+  let handPinching = false, lastPinch = false, pinchCooldown = 0;
+
+  function resizeHandCanvas() {
+    handCanvas.width = window.innerWidth;
+    handCanvas.height = window.innerHeight;
+  }
+  resizeHandCanvas();
+  window.addEventListener('resize', resizeHandCanvas);
+
+  // Joystick loop — center = cursor mode, outer 40% = edge scroll
+  let handHovTile = null;
+  function clearHandHov() {
+    if (handHovTile) { handHovTile.classList.remove('tile--hov'); handHovTile = null; }
+  }
+  function doHandCursor(x, y) {
+    const el = document.elementFromPoint(x, y);
+    const tile = el ? el.closest('.tile[data-proj]') : null;
+    if (tile !== handHovTile) {
+      clearHandHov();
+      handHovTile = tile;
+      if (tile) tile.classList.add('tile--hov');
+    }
+  }
+
+  function handJoystickTick() {
+    if (!handActive) return;
+
+    if (handTargetX != null) {
+      const SMOOTH_JOY  = 0.32;
+      const SMOOTH_DISP = 0.10;
+      if (handSmoothX == null) { handSmoothX = handTargetX; handSmoothY = handTargetY; }
+      handSmoothX += (handTargetX - handSmoothX) * SMOOTH_JOY;
+      handSmoothY += (handTargetY - handSmoothY) * SMOOTH_JOY;
+      if (handDispX == null) { handDispX = handTargetX; handDispY = handTargetY; }
+      handDispX += (handTargetX - handDispX) * SMOOTH_DISP;
+      handDispY += (handTargetY - handDispY) * SMOOTH_DISP;
+      if (handTargetThumbX != null) {
+        if (handThumbDispX == null) { handThumbDispX = handTargetThumbX; handThumbDispY = handTargetThumbY; }
+        handThumbDispX += (handTargetThumbX - handThumbDispX) * SMOOTH_DISP;
+        handThumbDispY += (handTargetThumbY - handThumbDispY) * SMOOTH_DISP;
+      }
+    } else {
+      clearHandHov();
+      return;
+    }
+
+    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    const dx = (handSmoothX - cx) / cx;
+    const dy = (handSmoothY - cy) / cy;
+    const EDGE_ZONE = 0.38; // beyond 38% of half-screen → scroll (larger edge area)
+
+    if (Math.abs(dx) > EDGE_ZONE || Math.abs(dy) > EDGE_ZONE) {
+      // Edge scroll mode
+      clearHandHov();
+      const mag = Math.hypot(dx, dy);
+      tYaw   -= (dx / mag) * 0.7;
+      tPitch += (dy / mag) * 0.7;
+    } else {
+      // Cursor mode — hand acts as pointer over tiles
+      if (!detailOpen && handDispX != null) doHandCursor(handDispX, handDispY);
+    }
+  }
+
+  // Integrate joystick into render loop
+  const origRender = render;  // not needed — we'll patch via setInterval since render is internal
+  // Simpler: run joystick in parallel rAF
+  function handLoop() {
+    handJoystickTick();
+    requestAnimationFrame(handLoop);
+  }
+
+  // Hit-test for pinch (canvas is pointer-events:none, so elementFromPoint
+  // sees the tile directly without needing to hide anything)
+  function pinchHit(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return;
+    const tileEl = el.closest('.tile');
+    if (tileEl) tileEl.click();
+  }
+
+  function onHandResults(results) {
+    handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+
+    if (!results.multiHandLandmarks || !results.multiHandLandmarks.length) {
+      handTargetX = handTargetY = null;
+      return;
+    }
+
+    const lms = results.multiHandLandmarks[0];
+    // Mirror X (webcam is mirrored)
+    const sx = (lm) => (1 - lm.x) * window.innerWidth;
+    const sy = (lm) => lm.y * window.innerHeight;
+
+    const tipX = sx(lms[8]), tipY = sy(lms[8]);
+    const thumbX = sx(lms[4]), thumbY = sy(lms[4]);
+
+    handTargetX = tipX; handTargetY = tipY;
+    handTargetThumbX = thumbX; handTargetThumbY = thumbY;
+
+    // Pinch detection
+    const pinchDist = Math.hypot(lms[4].x - lms[8].x, lms[4].y - lms[8].y);
+    handPinching = pinchDist < 0.065;
+
+    // Pinch — open hovered tile or close detail
+    if (pinchCooldown > 0) {
+      pinchCooldown--;
+    } else if (handPinching && !lastPinch) {
+      pinchCooldown = 28;
+      if (detailOpen) {
+        closeDetail();
+      } else if (handHovTile && handHovTile.dataset.proj) {
+        openDetail(handHovTile.dataset.proj);
+      }
+    }
+    lastPinch = handPinching;
+
+    // Draw dots using heavily-smoothed display values (no jitter)
+    const dTipX  = handDispX  != null ? handDispX  : tipX;
+    const dTipY  = handDispY  != null ? handDispY  : tipY;
+    const dThmX  = handThumbDispX != null ? handThumbDispX : thumbX;
+    const dThmY  = handThumbDispY != null ? handThumbDispY : thumbY;
+
+    // TWO clean circles: index + thumb. On pinch they merge into one bigger circle.
+    if (handPinching) {
+      const mx = (dTipX + dThmX) / 2;
+      const my = (dTipY + dThmY) / 2;
+      handCtx.beginPath();
+      handCtx.arc(mx, my, 16, 0, Math.PI * 2);
+      handCtx.fillStyle = '#fff';
+      handCtx.fill();
+    } else {
+      // Index fingertip
+      handCtx.beginPath();
+      handCtx.arc(dTipX, dTipY, 8, 0, Math.PI * 2);
+      handCtx.fillStyle = 'rgba(255,255,255,0.95)';
+      handCtx.fill();
+      // Thumb tip
+      handCtx.beginPath();
+      handCtx.arc(dThmX, dThmY, 8, 0, Math.PI * 2);
+      handCtx.fillStyle = 'rgba(255,255,255,0.95)';
+      handCtx.fill();
+    }
+  }
+
+  async function enableHandTracking() {
+    btnHand.textContent = 'lade…';
+    btnHand.disabled = true;
+    try {
+      // Load MediaPipe scripts on demand
+      if (!window.Hands) {
+        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js');
+      }
+      if (!window.Camera) {
+        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js');
+      }
+
+      handModel = new Hands({
+        locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${f}`
+      });
+      handModel.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 0,
+        minDetectionConfidence: 0.75,
+        minTrackingConfidence: 0.5,
+      });
+      handModel.onResults(onHandResults);
+
+      handCamera = new Camera(webcam, {
+        onFrame: async () => { if (handActive) await handModel.send({ image: webcam }); },
+        width: 640, height: 480,
+      });
+      await handCamera.start();
+
+      handActive = true;
+      document.body.classList.add('hand-on');  // kills mouse hover + hides cursor
+      btnHand.disabled = false;
+      btnHand.classList.add('on');
+      btnHand.innerHTML = '<span class="sensor-btn__dot"></span>hand tracking an';
+      handLoop();
+    } catch (err) {
+      btnHand.disabled = false;
+      btnHand.innerHTML = '<span class="sensor-btn__dot"></span>kamera blockiert';
+      console.warn('hand tracking failed:', err);
+      setTimeout(() => {
+        btnHand.innerHTML = '<span class="sensor-btn__dot"></span>hand tracking';
+      }, 2500);
+    }
+  }
+
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src; s.crossOrigin = 'anonymous';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  function disableHandTracking() {
+    handActive = false;
+    document.body.classList.remove('hand-on');
+    try { if (handCamera && handCamera.stop) handCamera.stop(); } catch(_) {}
+    // Stop webcam tracks (release camera light / indicator)
+    try {
+      const stream = webcam.srcObject;
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      webcam.srcObject = null;
+    } catch(_) {}
+    // Clear UI state
+    handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+    handTargetX = handTargetY = null;
+    handSmoothX = handSmoothY = null;
+    handDispX = handDispY = null;
+    handThumbDispX = handThumbDispY = null;
+    handTargetThumbX = handTargetThumbY = null;
+    if (typeof clearHandHov === 'function') clearHandHov();
+    btnHand.classList.remove('on');
+    btnHand.innerHTML = '<span class="sensor-btn__dot"></span>hand tracking';
+  }
+
+  btnHand.addEventListener('click', () => {
+    if (btnHand.disabled) return;
+    if (handActive) disableHandTracking();
+    else enableHandTracking();
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GYROSCOPE — tilt phone to pan sphere (iOS needs permission prompt)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const btnGyro = document.getElementById('btnGyro');
+  let gyroActive = false;
+  let gyroBaseBeta = null, gyroBaseGamma = null;
+
+  function onDeviceOrientation(e) {
+    if (!gyroActive) return;
+    if (e.beta == null || e.gamma == null) return;
+    if (gyroBaseBeta == null) {
+      gyroBaseBeta = e.beta;
+      gyroBaseGamma = e.gamma;
+      return;
+    }
+    const dBeta  = e.beta  - gyroBaseBeta;   // forward/back tilt
+    const dGamma = e.gamma - gyroBaseGamma;  // left/right tilt
+
+    // Map to absolute target (not delta) — so phone orientation = view angle
+    const GAIN_Y = 1.4;
+    const GAIN_X = 1.4;
+    tYaw   = dGamma * GAIN_X;
+    tPitch = -dBeta * GAIN_Y;
+  }
+
+  async function enableGyro() {
+    btnGyro.disabled = true;
+    try {
+      // iOS 13+ permission flow
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        const status = await DeviceOrientationEvent.requestPermission();
+        if (status !== 'granted') throw new Error('permission denied');
+      }
+      window.addEventListener('deviceorientation', onDeviceOrientation);
+      gyroActive = true;
+      btnGyro.classList.add('on');
+      btnGyro.innerHTML = '<span class="sensor-btn__dot"></span>gyroskop an';
+    } catch (err) {
+      btnGyro.innerHTML = '<span class="sensor-btn__dot"></span>gyro blockiert';
+      console.warn('gyro failed:', err);
+      setTimeout(() => {
+        btnGyro.innerHTML = '<span class="sensor-btn__dot"></span>gyroskop';
+      }, 2500);
+    }
+    btnGyro.disabled = false;
+  }
+
+  btnGyro.addEventListener('click', () => {
+    if (!gyroActive) enableGyro();
+    else {
+      window.removeEventListener('deviceorientation', onDeviceOrientation);
+      gyroActive = false;
+      gyroBaseBeta = gyroBaseGamma = null;
+      btnGyro.classList.remove('on');
+      btnGyro.innerHTML = '<span class="sensor-btn__dot"></span>gyroskop';
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
