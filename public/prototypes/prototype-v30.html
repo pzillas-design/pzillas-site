@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>pix v30 — Portfolio Sphere</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#020202;-webkit-font-smoothing:antialiased}
+
+#globe-wrapper{position:fixed;inset:0;transition:opacity .7s cubic-bezier(.6,0,.8,.3),transform .7s cubic-bezier(.6,0,.8,.3),filter .7s}
+
+canvas{display:block;width:100%!important;height:100%!important;touch-action:none;cursor:grab}
+canvas.dragging{cursor:grabbing}
+
+#vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:8;
+  background:radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(2,2,2,.55) 75%, rgba(2,2,2,.82) 100%);
+  opacity:0;transition:opacity .6s ease;
+}
+#vignette.visible{opacity:1}
+
+#site-chrome{
+  position:fixed;left:24px;right:24px;top:22px;z-index:70;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:24px;
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  color:#fff;pointer-events:auto;
+  transition:opacity .34s ease,filter .34s ease,transform .34s ease;
+}
+body.is-inside #site-chrome{opacity:0;filter:blur(6px);transform:translateY(-8px)}
+.brand-lockup{display:flex;flex-direction:column;gap:8px;max-width:330px;pointer-events:none}
+.brand-mark{font-size:13px;font-weight:720;letter-spacing:.34em;text-transform:uppercase;color:rgba(255,255,255,.92)}
+.brand-copy{font-size:clamp(12px,1.25vw,15px);font-weight:400;line-height:1.45;color:rgba(255,255,255,.48)}
+.site-nav{display:flex;align-items:center;gap:8px;pointer-events:auto}
+.nav-pill{
+  border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(0,0,0,.24);
+  color:rgba(255,255,255,.78);padding:10px 14px;
+  font:650 10px/1 "Helvetica Neue",Helvetica,Arial,sans-serif;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;cursor:pointer;
+  backdrop-filter:blur(16px);transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease;
+}
+.nav-pill:hover{background:#fff;color:#020202;border-color:#fff;transform:translateY(-1px)}
+.nav-pill--primary{background:rgba(255,255,255,.9);color:#020202;border-color:rgba(255,255,255,.9)}
+#landing-prompt{
+  position:fixed;left:50%;top:52%;z-index:45;transform:translate(-50%,-50%);
+  width:min(980px,86vw);text-align:center;pointer-events:none;
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#fff;
+  transition:opacity .38s ease,filter .38s ease,transform .38s ease;
+}
+body.has-world #landing-prompt,
+body.is-inside #landing-prompt{opacity:0;filter:blur(8px);transform:translate(-50%,-48%) scale(.98)}
+.landing-title{
+  font-size:clamp(76px,17vw,260px);font-weight:760;letter-spacing:-.08em;line-height:.78;
+  color:rgba(255,255,255,.9);text-shadow:0 0 70px rgba(255,255,255,.08);
+}
+.landing-sub{
+  margin:24px auto 0;max-width:520px;font-size:clamp(13px,1.4vw,17px);line-height:1.5;
+  color:rgba(255,255,255,.5);
+}
+@media (max-width:720px){
+  #site-chrome{left:16px;right:16px;top:16px;flex-direction:column;gap:14px}
+  .brand-copy{max-width:280px}
+  .site-nav{flex-wrap:wrap}
+  #landing-prompt{top:58%}
+}
+
+#project-info{
+  position:fixed;left:50%;top:76vh;z-index:56;
+  width:min(540px,72vw);transform:translateX(-50%) translateY(10px);
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  color:#fff;pointer-events:none;opacity:0;filter:blur(3px);
+  transition:opacity .28s ease,filter .28s ease,transform .28s ease;
+}
+#project-info.visible{opacity:1;filter:blur(0);transform:translateX(-50%) translateY(0)}
+.project-kicker{
+  margin-bottom:8px;font-size:10px;font-weight:650;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,255,255,.44);
+}
+.project-title{
+  margin-bottom:8px;font-size:clamp(22px,2.8vw,34px);font-weight:520;letter-spacing:-.035em;line-height:.98;
+  color:rgba(255,255,255,.92);
+}
+.project-body{
+  max-width:58ch;font-size:clamp(12px,1.18vw,15px);font-weight:400;line-height:1.45;
+  color:rgba(255,255,255,.56);
+}
+.project-bars{
+  display:flex;gap:5px;margin-top:6px;margin-bottom:14px;height:2px;align-items:center;
+}
+.project-bars span{
+  display:block;width:18px;height:2px;border-radius:999px;background:rgba(255,255,255,.2);
+  transition:background .35s ease,width .35s ease,opacity .35s ease;
+}
+.project-bars span.active{width:30px;background:rgba(255,255,255,.76)}
+.project-link{
+  display:inline-block;margin-top:14px;font-size:11px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.78);text-decoration:none;pointer-events:auto;
+}
+
+.globe-btn{
+  position:fixed;left:50%;bottom:14vh;transform:translateX(-50%);z-index:50;
+  display:inline-flex;align-items:center;gap:10px;padding:16px 30px;
+  font-family:Helvetica Neue,Arial,sans-serif;font-weight:500;font-size:14px;
+  letter-spacing:.2em;text-transform:uppercase;color:#000;background:#fff;
+  border:1.5px solid #fff;border-radius:999px;cursor:pointer;
+  box-shadow:0 10px 40px rgba(255,255,255,.12);transition:background 200ms,color 200ms;
+  opacity:0;pointer-events:none;white-space:nowrap;
+}
+.globe-btn.visible{opacity:1;pointer-events:auto;animation:btnIn .26s cubic-bezier(.2,.9,.3,1) both}
+.globe-btn:hover{background:#000;color:#fff}
+@keyframes btnIn{from{opacity:0;transform:translateX(-50%) translateY(14px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+#btn-back{
+  left:50%;top:auto;bottom:7.5vh;transform:translateX(-50%);
+  padding:12px 20px;font-size:11px;letter-spacing:.18em;
+  color:rgba(255,255,255,.82);background:rgba(0,0,0,.28);
+  border-color:rgba(255,255,255,.22);box-shadow:none;backdrop-filter:blur(18px);
+}
+#btn-back:hover{background:#fff;color:#000}
+#btn-back.visible{animation:backIn .28s cubic-bezier(.2,.9,.3,1) both}
+@keyframes backIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── Edit Panel ─────────────────────────────────────────────────────────── */
+#controls{
+  position:fixed;bottom:24px;right:24px;z-index:100;
+  width:230px;
+  background:rgba(6,6,6,.88);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:10px;
+  overflow:hidden;
+  backdrop-filter:blur(20px);
+  font-family:ui-monospace,monospace;
+  font-size:10.5px;
+  color:rgba(255,255,255,.45);
+  max-height:90vh;
+  display:flex;flex-direction:column;
+}
+
+/* Panel top bar */
+.panel-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  flex-shrink:0;
+  cursor:pointer;
+}
+.panel-bar-label{
+  font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(255,255,255,.28);
+}
+.panel-bar-icon{
+  font-size:14px;line-height:1;color:rgba(255,255,255,.2);
+  transition:color .15s;font-style:normal;
+}
+.panel-bar:hover .panel-bar-icon{color:rgba(255,255,255,.5)}
+.admin-link{
+  display:block;margin:0 14px 12px;padding:8px 10px;border:1px solid rgba(255,255,255,.08);
+  border-radius:7px;color:rgba(255,255,255,.55);text-decoration:none;text-align:center;
+  font:9px/1 ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;
+}
+.admin-link:hover{color:#fff;border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.05)}
+#controls.collapsed .admin-link{display:none}
+
+/* Scrollable sections wrapper */
+.panel-sections{
+  overflow-y:auto;overflow-x:hidden;
+  flex:1;
+  transition:max-height .3s ease;
+  max-height:800px;
+}
+#controls.collapsed .panel-sections{
+  max-height:0;
+  pointer-events:none;
+}
+
+/* Section */
+.sec{border-bottom:1px solid rgba(255,255,255,.06)}
+.sec:last-child{border-bottom:none}
+
+.sec-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;
+  cursor:pointer;
+  font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,255,255,.28);
+  transition:color .15s;
+}
+.sec-head:hover{color:rgba(255,255,255,.55)}
+.sec-head .chev{
+  font-style:normal;font-size:10px;
+  display:inline-block;
+  transform:rotate(0deg);
+  transition:transform .2s ease;
+  color:rgba(255,255,255,.18);
+}
+.sec.open .sec-head .chev{transform:rotate(90deg)}
+
+.sec-body{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .25s ease;
+}
+.sec.open .sec-body{max-height:600px}
+
+.sec-inner{
+  padding:6px 14px 14px;
+  display:flex;flex-direction:column;gap:9px;
+}
+
+/* Control row */
+.cr{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.cr-val{color:rgba(255,255,255,.82);min-width:38px;text-align:right}
+
+input[type=range]{
+  width:100%;accent-color:rgba(255,255,255,.5);
+  height:2px;cursor:pointer;outline:none;
+  display:block;
+}
+
+/* Select dropdown */
+.cr-label{color:rgba(255,255,255,.38);margin-bottom:3px;font-size:9.5px}
+select{
+  width:100%;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:5px;
+  color:rgba(255,255,255,.65);
+  font-family:ui-monospace,monospace;
+  font-size:10px;
+  padding:5px 7px;
+  cursor:pointer;
+  outline:none;
+  -webkit-appearance:none;appearance:none;
+}
+select:hover{border-color:rgba(255,255,255,.18)}
+
+</style>
+</head>
+<body>
+
+<div id="asset-warning" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(8,8,8,.96);color:#fff;font-family:Helvetica Neue,Arial,sans-serif;align-items:center;justify-content:center;padding:48px;text-align:center;flex-direction:column;gap:18px">
+  <div style="font-size:22px;font-weight:600;letter-spacing:.02em">Bilder konnten nicht geladen werden</div>
+  <div style="opacity:.7;max-width:560px;line-height:1.6">Dieser Prototyp braucht den lokalen Static-Server. Öffne diese URL:</div>
+  <a id="asset-warning-url" style="color:#fff;font-family:ui-monospace,monospace;background:rgba(255,255,255,.08);padding:12px 20px;border-radius:8px;border:1px solid rgba(255,255,255,.15);text-decoration:none">http://localhost:4201/prototypes/prototype-v30.html</a>
+  <div style="opacity:.5;font-size:13px;max-width:560px">Falls der Server nicht läuft: im Projektordner <code style="background:rgba(255,255,255,.08);padding:2px 6px;border-radius:4px">./start-pix.sh</code> ausführen.</div>
+</div>
+<script>
+(function(){
+  if (location.protocol === 'file:') return;
+  // Self-check: try to load one of the assets. If it fails, show the warning.
+  const probe = new Image();
+  const url = location.origin + '/assets/uxui/asset%202.webp';
+  probe.onerror = () => {
+    const el = document.getElementById('asset-warning');
+    if (!el) return;
+    el.style.display = 'flex';
+    const a = document.getElementById('asset-warning-url');
+    if (a) {
+      a.href = 'http://localhost:4201/prototypes/prototype-v30.html';
+      a.textContent = 'http://localhost:4201/prototypes/prototype-v30.html';
+    }
+  };
+  probe.src = url;
+})();
+</script>
+
+<div id="globe-wrapper"><canvas id="c"></canvas></div>
+
+<header id="site-chrome" aria-label="Portfolio Navigation">
+  <div class="brand-lockup">
+    <div class="brand-mark">PIX / PZILLAS</div>
+    <p class="brand-copy">Räumliches Portfolio für UX, Interfaces und Fotografie. Zwei Welten, ein System: kuratierte Cases, klare Projekttexte und direkter Einstieg.</p>
+  </div>
+  <nav class="site-nav">
+    <button class="nav-pill" type="button" data-world="uxui" onclick="window.selectPixWorld&&window.selectPixWorld('uxui')">UX</button>
+    <button class="nav-pill" type="button" data-world="foto" onclick="window.selectPixWorld&&window.selectPixWorld('foto')">Foto</button>
+    <a class="nav-pill nav-pill--primary" href="mailto:hallo@pix.de?subject=Projektanfrage%20PIX">Kontakt</a>
+  </nav>
+</header>
+
+<section id="landing-prompt" aria-hidden="true">
+  <div class="landing-title">PIX</div>
+  <p class="landing-sub">Wähle eine Welt: UX für digitale Produkte oder Foto für visuelle Serien. Vertikal tauchst du ein, horizontal wanderst du weiter.</p>
+</section>
+
+<script>
+// Lightweight fallback so the page chrome remains interactive even if WebGL/module loading fails.
+window.selectPixWorld = function(world) {
+  document.body.classList.toggle('has-world', !!world);
+  document.body.dataset.selectedWorld = world || '';
+  window.dispatchEvent(new CustomEvent('pix-world-select', { detail: { world } }));
+};
+</script>
+
+<button class="globe-btn" id="btn-expand">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+  öffnen
+</button>
+
+<div id="vignette"></div>
+
+<div id="project-info" aria-hidden="true">
+  <div class="project-kicker" id="project-kicker"></div>
+  <div class="project-title" id="project-title"></div>
+  <div class="project-bars" id="project-bars"></div>
+  <div class="project-body" id="project-body"></div>
+  <a class="project-link" id="project-link" href="mailto:hallo@pix.de?subject=Projektanfrage%20PIX"></a>
+</div>
+
+<button class="globe-btn" id="btn-back" style="z-index:60">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>
+  zurück
+</button>
+
+<!-- ── Edit Panel ─────────────────────────────────────────────────────────── -->
+<div id="controls" class="collapsed" autocomplete="off">
+
+  <div class="panel-bar" id="panel-bar">
+    <span class="panel-bar-label">Edit</span>
+    <i class="panel-bar-icon" id="panel-icon">⊞</i>
+  </div>
+  <a class="admin-link" href="./admin-v30.html">CMS öffnen</a>
+
+  <div class="panel-sections" id="panel-sections">
+
+    <!-- Globe -->
+    <div class="sec open">
+      <div class="sec-head"><span>Globe</span><i class="chev">›</i></div>
+      <div class="sec-body"><div class="sec-inner">
+
+        <div>
+          <div class="cr"><span>Inner Scale</span><span class="cr-val" id="v-gscale">0.95</span></div>
+          <input autocomplete="off" type="range" id="s-gscale" min="0.3" max="3" step="0.05" value="0.95">
+        </div>
+        <div>
+          <div class="cr"><span>3D Modell</span><span class="cr-val" id="v-mscale">3.25</span></div>
+          <input autocomplete="off" type="range" id="s-mscale" min="0.1" max="5" step="0.05" value="3.25">
+        </div>
+        <div>
+          <div class="cr"><span>Label Größe</span><span class="cr-val" id="v-lblscale">0.30</span></div>
+          <input autocomplete="off" type="range" id="s-lblscale" min="0.1" max="4" step="0.05" value="0.30">
+        </div>
+        <div>
+          <div class="cr"><span>Label Tiefe</span><span class="cr-val" id="v-lblz">-0.5</span></div>
+          <input autocomplete="off" type="range" id="s-lblz" min="-4" max="4" step="0.1" value="-0.5">
+        </div>
+
+        <div>
+          <div class="cr-label">UX · UI Model</div>
+          <select autocomplete="off" id="sel-ux">
+            <option value="imac">iMac</option>
+            <option value="monitor">Monitor</option>
+            <option value="crystal">Crystal</option>
+            <option value="diamond">Diamond</option>
+            <option value="prism">Prism</option>
+            <option value="prism2" selected>Prism V2</option>
+            <option value="laptop">Laptop</option>
+            <option value="filmcam">Film Camera</option>
+            <option value="camera">Camera DSLR</option>
+            <option value="phone">Smartphone</option>
+            <option value="compact">Compact Camera</option>
+            <option value="compact2">Compact V2</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="cr-label">Foto · Video Model</div>
+          <select autocomplete="off" id="sel-foto">
+            <option value="filmcam">Film Camera</option>
+            <option value="camera">Camera DSLR</option>
+            <option value="phone">Smartphone</option>
+            <option value="compact">Compact Camera</option>
+            <option value="compact2" selected>Compact V2</option>
+            <option value="imac">iMac</option>
+            <option value="monitor">Monitor</option>
+            <option value="crystal">Crystal</option>
+            <option value="diamond">Diamond</option>
+            <option value="prism">Prism</option>
+            <option value="prism2">Prism V2</option>
+            <option value="laptop">Laptop</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="cr"><span>Welten-Winkel</span><span class="cr-val" id="v-wangle">13°</span></div>
+          <input autocomplete="off" type="range" id="s-wangle" min="10" max="90" step="1" value="13">
+        </div>
+
+        <div>
+          <div class="cr-label">Shell Pattern</div>
+          <select autocomplete="off" id="sel-shell">
+            <option value="sphere">Sphere</option>
+            <option value="icosa">Icosahedron</option>
+            <option value="octa">Octahedron</option>
+            <option value="rings">Rings + Meridians</option>
+            <option value="latitude" selected>Breitenkreise</option>
+            <option value="dots">Punktewolke</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div>
+          <div class="cr"><span>Shell Opacity</span><span class="cr-val" id="v-shopacity">0.265</span></div>
+          <input autocomplete="off" type="range" id="s-shopacity" min="0" max="0.4" step="0.005" value="0.265">
+        </div>
+
+      </div></div>
+    </div>
+
+    <!-- Tiles -->
+    <div class="sec open">
+      <div class="sec-head"><span>Tiles</span><i class="chev">›</i></div>
+      <div class="sec-body"><div class="sec-inner">
+
+        <div>
+          <div class="cr"><span>Übersicht Größe</span><span class="cr-val" id="v-tscale">3.00</span></div>
+          <input autocomplete="off" type="range" id="s-tscale" min="0.3" max="14" step="0.05" value="3">
+        </div>
+        <div>
+          <div class="cr"><span>Übersicht Abstand</span><span class="cr-val" id="v-tgap">0.48</span></div>
+          <input autocomplete="off" type="range" id="s-tgap" min="0.05" max="2.5" step="0.05" value="0.48">
+        </div>
+        <div>
+          <div class="cr"><span>Innen Größe</span><span class="cr-val" id="v-inscale">8.00</span></div>
+          <input autocomplete="off" type="range" id="s-inscale" min="0.5" max="24" step="0.05" value="8">
+        </div>
+        <div>
+          <div class="cr"><span>Innen Abstand</span><span class="cr-val" id="v-ingap">0.48</span></div>
+          <input autocomplete="off" type="range" id="s-ingap" min="0.05" max="2.5" step="0.05" value="0.48">
+        </div>
+        <div>
+          <div class="cr"><span>Text Höhe</span><span class="cr-val" id="v-infoy">76%</span></div>
+          <input autocomplete="off" type="range" id="s-infoy" min="58" max="88" step="1" value="76">
+        </div>
+
+      </div></div>
+    </div>
+
+    <!-- Camera -->
+    <div class="sec open">
+      <div class="sec-head"><span>Camera</span><i class="chev">›</i></div>
+      <div class="sec-body"><div class="sec-inner">
+
+        <div>
+          <div class="cr"><span>Camera Z</span><span class="cr-val" id="v-camz">5.7</span></div>
+          <input autocomplete="off" type="range" id="s-camz" min="2" max="20" step="0.1" value="5.7">
+        </div>
+        <div>
+          <div class="cr"><span>FOV</span><span class="cr-val" id="v-fov">48°</span></div>
+          <input autocomplete="off" type="range" id="s-fov" min="10" max="90" step="1" value="48">
+        </div>
+
+      </div></div>
+    </div>
+
+  </div><!-- /panel-sections -->
+</div><!-- /controls -->
+
+<script type="module">
+import * as THREE from 'three';
+
+// ── Constants ──────────────────────────────────────────────────────────────────
+const DEG   = Math.PI / 180;
+let worldAngle = 17 * DEG;
+const CONTACT_HREF = 'mailto:hallo@pix.de?subject=Projektanfrage%20PIX';
+function damp(a, b, l, dt) { return a + (b - a) * (1 - Math.exp(-l * dt)); }
+
+// ── Images ─────────────────────────────────────────────────────────────────────
+const IMAGE_BASES = ['../repo/public/images', '../pzillas-site/public/images'];
+const OB_BASES = ['../assets/offenblende', 'file:///Users/michaelpzillas/Projekte/_pix/assets/offenblende'];
+const UXUI_BASES = ['../assets/uxui', 'file:///Users/michaelpzillas/Projekte/_pix/assets/uxui'];
+const IMMO_BASES = ['../assets/immo fotos', 'file:///Users/michaelpzillas/Projekte/_pix/assets/immo fotos'];
+const BIZ_EVENT_BASES = ['../assets/busiens und events fotos', 'file:///Users/michaelpzillas/Projekte/_pix/assets/busiens%20und%20events%20fotos'];
+const PIX_SVG_CANDIDATES = [
+  '../pix logo.svg',
+  '../repo/public/pix.svg',
+  'file:///Users/michaelpzillas/Projekte/_pix/pix logo.svg',
+  'file:///Users/michaelpzillas/Projekte/_pix/repo/public/pix.svg'
+];
+
+function assetCandidates(bases, path) {
+  return bases.map(base => `${base}/${path}`);
+}
+
+function imageAsset(path) {
+  return assetCandidates(IMAGE_BASES, path);
+}
+
+function offenblendeAsset(path) {
+  return assetCandidates(OB_BASES, path);
+}
+
+function uxuiAsset(path) {
+  return assetCandidates(UXUI_BASES, path);
+}
+
+function immoAsset(path) {
+  return assetCandidates(IMMO_BASES, path);
+}
+
+function bizEventAsset(path) {
+  return assetCandidates(BIZ_EVENT_BASES, path);
+}
+
+// ── Tile grid: one long strip ─────────────────────────────────────────────────
+// Center three tiles appear in the world overview. Level 3 reveals the wider row.
+const W = 3.0, H = 2.0;   // landscape 3:2
+const TILE_GRID = [
+  {col:-5.5, row:0, w:W, h:H, extra:true,  strip:false}, // 0 Events
+  {col:-4.5, row:0, w:W, h:H, extra:true,  strip:false}, // 1 Events
+  {col:-3.5, row:0, w:W, h:H, extra:true,  strip:false}, // 2 Events
+  {col:-2.5, row:0, w:W, h:H, extra:true,  strip:false}, // 3 Events
+  {col:-1.0, row:0, w:W, h:H, extra:false, strip:true},  // 4 Immobilien overview
+  {col: 0.0, row:0, w:W, h:H, extra:false, strip:true},  // 5 Immobilien overview
+  {col: 1.0, row:0, w:W, h:H, extra:false, strip:true},  // 6 Immobilien overview
+  {col: 2.3, row:0, w:W, h:H, extra:true,  strip:false}, // 7 Immobilien
+  {col: 3.3, row:0, w:W, h:H, extra:true,  strip:false}, // 8 Immobilien
+  {col: 5.0, row:0, w:W, h:H, extra:true,  strip:false}, // 9 Business
+  {col: 6.0, row:0, w:W, h:H, extra:true,  strip:false}, // 10 Business
+  {col: 7.0, row:0, w:W, h:H, extra:true,  strip:false}, // 11 Business
+];
+
+// Foto images — null = text tile at that index
+const FOTO_IMGS = [
+  bizEventAsset(' 1.webp'),              // 0 Events
+  bizEventAsset(' 3.webp'),              // 1 Events
+  offenblendeAsset('-Portfolio-Konferenz-0001.jpg'),  // 2 Events
+  offenblendeAsset('-Portfolio-Konferenz-0003.jpeg'), // 3 Events
+  immoAsset('asset 1.webp'),             // 4 Immobilien overview left
+  immoAsset('asset 3.webp'),             // 5 Immobilien overview center
+  offenblendeAsset('-Portfolio-Drohnenfotografie-0003.jpeg'), // 6 Immobilien overview right
+  immoAsset('asset 5.webp'),             // 7 Immobilien
+  immoAsset('asset 6.webp'),             // 8 Immobilien
+  bizEventAsset('asset 1.webp'),         // 9 Business
+  bizEventAsset('asset 4.webp'),         // 10 Business
+  offenblendeAsset('-Portfolio-Produktfotografie-0001.jpg'), // 11 Business
+];
+
+const FOTO_SLIDES = {
+  0:  [bizEventAsset(' 1.webp')],
+  1:  [bizEventAsset(' 3.webp')],
+  2:  [offenblendeAsset('-Portfolio-Konferenz-0001.jpg')],
+  3:  [offenblendeAsset('-Portfolio-Konferenz-0003.jpeg')],
+  4:  [immoAsset('asset 1.webp')],
+  5:  Object.assign([immoAsset('asset 3.webp'), offenblendeAsset('-Portfolio-Drohnenfotografie-0003.jpeg'), immoAsset('asset 1.webp')], {autoplay:true}),
+  6:  [offenblendeAsset('-Portfolio-Drohnenfotografie-0003.jpeg')],
+  7:  [immoAsset('asset 5.webp')],
+  8:  [immoAsset('asset 6.webp')],
+  9:  [bizEventAsset('asset 1.webp')],
+  10: [bizEventAsset('asset 4.webp')],
+  11: [offenblendeAsset('-Portfolio-Produktfotografie-0001.jpg')],
+};
+
+const FOTO_CAPTIONS = {
+  0: {category:'Event Reportage', title:'Opening Night', body:'Dokumentarische Bilder mit Fokus auf Licht, Begegnungen und die kleinen Gesten zwischen den Programmpunkten.'},
+  1: {category:'Event Reportage', title:'Audience Moments', body:'Eine Serie aus echten Reaktionen und nahen Beobachtungen, ohne die Atmosphäre des Abends zu überinszenieren.'},
+  2: {category:'Konferenz', title:'Stage & Talk', body:'Klare Blickachsen, Speaker-Momente und Raumgefühl für die Kommunikation nach dem Event.'},
+  3: {category:'Konferenz', title:'Behind the Room', body:'Visuelle Notizen aus Publikum, Bühne und Umgebung, die den Charakter der Veranstaltung weitertragen.'},
+  4: {category:'Immobilien', title:'Terrasse & Außenraum', body:'Licht, Material und Umgebung werden als ein zusammenhängendes Raumgefühl lesbar.'},
+  5: {category:'Immobilien', title:'Drohnenperspektive', body:'Die Lage und Außenwirkung werden ruhig eingeordnet, bevor Details und Innenräume übernehmen.'},
+  6: {category:'Immobilien', title:'Quartier von oben', body:'Eine klare räumliche Orientierung für Exposés, Website und digitale Vermarktung.'},
+  7: {category:'Immobilien', title:'Interior Details', body:'Oberflächen, Linien und Tageslicht zeigen die Qualität des Objekts ohne künstliche Inszenierung.'},
+  8: {category:'Immobilien', title:'Living Space', body:'Helle, ruhige Bildsprache für Räume, die sofort verständlich und einladend wirken.'},
+  9: {category:'Business', title:'Team Portrait', body:'Professionelle Nähe für Menschen, Prozesse und Markenauftritt im Unternehmenskontext.'},
+  10:{category:'Business', title:'Brand Story', body:'Portraits, Produktnähe und Arbeitssituationen mit einer klaren, unaufgeregten Bildsprache.', button:'Serie ansehen'},
+  11:{category:'Produkt', title:'Product Focus', body:'Reduzierte Produktfotografie, die Form, Material und Nutzen in den Vordergrund stellt.'},
+};
+
+const UXUI_IMGS = [
+  uxuiAsset('asset 2.webp'),      // 0
+  uxuiAsset('asset 3.webp'),      // 1
+  uxuiAsset('asset 4.webp'),      // 2
+  uxuiAsset('asset 5.webp'),      // 3
+  uxuiAsset('asset 6.webp'),      // 4 overview left
+  uxuiAsset('asset 7.webp'),      // 5 overview center
+  uxuiAsset('asset 2.webp'),      // 6 overview right (reuse)
+  uxuiAsset('asset 3.webp'),      // 7
+  uxuiAsset('asset 4.webp'),      // 8
+  uxuiAsset('asset 5.webp'),      // 9
+  uxuiAsset('asset 6.webp'),      // 10
+  uxuiAsset('asset 7.webp'),      // 11
+];
+
+const UXUI_SLIDES = {
+  0:  [uxuiAsset('asset 2.webp')],
+  1:  [uxuiAsset('asset 3.webp')],
+  2:  [uxuiAsset('asset 4.webp')],
+  3:  [uxuiAsset('asset 5.webp')],
+  4:  [uxuiAsset('asset 6.webp')],
+  5:  Object.assign([uxuiAsset('asset 7.webp'), uxuiAsset('asset 6.webp'), uxuiAsset('asset 2.webp')], {autoplay:true}),
+  6:  [uxuiAsset('asset 2.webp')],
+  7:  [uxuiAsset('asset 3.webp')],
+  8:  [uxuiAsset('asset 4.webp')],
+  9:  [uxuiAsset('asset 5.webp')],
+  10: [uxuiAsset('asset 6.webp')],
+  11: [uxuiAsset('asset 7.webp')],
+};
+
+const UXUI_CAPTIONS = {
+  0:  {category:'Web-App', title:'Tozasto', body:'Eine Plattform für nachhaltige Immobilienprojekte mit klarer Struktur für Inhalte, Kontakt und Projektlogik.', button:'Case öffnen'},
+  1:  {category:'SaaS Interface', title:'Leasehub', body:'Digitale Ordnung für Vermietung, Objekte und Übergaben. Komplexe Abläufe werden in einfache Arbeitsschritte übersetzt.'},
+  2:  {category:'Culture App', title:'Staatstheater', body:'Eine Anwendung für Spuren, Begegnungen und Stadtraum, gestaltet als ruhiger Zugang zu einem vielschichtigen Erlebnis.'},
+  3:  {category:'Operations Tool', title:'Jakob Admin', body:'Touren, Ressourcen und Kontakte in einem klaren Arbeitsfluss, damit tägliche Planung schnell erfassbar bleibt.'},
+  4:  {category:'Operations Tool', title:'Jakob Admin', body:'Planung, Status und Detailinformationen werden so verdichtet, dass Teams ohne Kontextwechsel arbeiten können.', button:'Case öffnen'},
+  5:  {category:'Healthcare Website', title:'Psilox', body:'Eine wissenschaftliche Produkt- und Unternehmensseite mit präziser Sprache rund um CAPOSAL, Dental Health und Materialinnovation.'},
+  6:  {category:'Web-App', title:'Tozasto', body:'Projektseiten, Nachhaltigkeitsargumente und Immobilienlogik werden zu einer fokussierten digitalen Nutzerreise verbunden.'},
+  7:  {category:'Dashboard', title:'Resource View', body:'Ein reduzierter Überblick für operative Entscheidungen, der Daten nicht lauter macht als nötig.'},
+  8:  {category:'SaaS Interface', title:'Leasehub', body:'Struktur für Vermietung, Objekte und Übergaben mit einer Oberfläche, die Fortschritt und nächste Schritte sichtbar macht.'},
+  9:  {category:'Culture App', title:'Staatstheater', body:'Ein digitales Erlebnis zwischen Orientierung, Erzählung und Interaktion im Stadtraum.'},
+  10: {category:'Healthcare Website', title:'Psilox', body:'Komplexe biokeramische Technologie wird in eine klare Informationsarchitektur und seriöse Markenpräsenz übersetzt.'},
+  11: {category:'Product Design', title:'Interface System', body:'Wiederverwendbare Module, klare Zustände und ruhige Hierarchien für digitale Produkte mit vielen Details.'},
+};
+
+const CONTENT_STORAGE_KEY = 'pix.v30.content';
+const LEGACY_CONTENT_STORAGE_KEY = 'pix.v29.content';
+function loadContentOverride() {
+  try {
+    return JSON.parse(localStorage.getItem(CONTENT_STORAGE_KEY) || localStorage.getItem(LEGACY_CONTENT_STORAGE_KEY) || 'null');
+  } catch (err) {
+    console.warn('PIX content override could not be parsed', err);
+    return null;
+  }
+}
+
+function assetFromPath(path) {
+  if (!path) return null;
+  if (/^(file:|https?:|\.{0,2}\/|\/)/.test(path)) return path;
+  return `../${path}`;
+}
+
+function applyWorldOverride(world, imgs, slides, captions) {
+  const slots = world?.slots;
+  if (!Array.isArray(slots)) return;
+  slots.slice(0, TILE_GRID.length).forEach((slot, idx) => {
+    const slideSources = (slot.slides || []).map(assetFromPath).filter(Boolean);
+    if (slideSources[0]) imgs[idx] = slideSources[0];
+    slides[idx] = slideSources.length ? slideSources : (imgs[idx] ? [imgs[idx]] : []);
+    slides[idx].autoplay = slides[idx].length > 1;
+    captions[idx] = {
+      category: slot.category || captions[idx]?.category || 'Projekt',
+      title: slot.title || captions[idx]?.title || `Slot ${idx + 1}`,
+      body: slot.body || captions[idx]?.body || '',
+      button: slot.button || captions[idx]?.button || '',
+      href: slot.href || captions[idx]?.href || ''
+    };
+    if (Number.isFinite(Number(slot.col))) TILE_GRID[idx].col = Number(slot.col);
+    if (Number.isFinite(Number(slot.row))) TILE_GRID[idx].row = Number(slot.row);
+    if (typeof slot.strip === 'boolean') {
+      TILE_GRID[idx].strip = slot.strip;
+      TILE_GRID[idx].extra = !slot.strip;
+    }
+  });
+}
+
+const contentOverride = loadContentOverride();
+if (contentOverride?.worlds) {
+  applyWorldOverride(contentOverride.worlds.foto, FOTO_IMGS, FOTO_SLIDES, FOTO_CAPTIONS);
+  applyWorldOverride(contentOverride.worlds.uxui, UXUI_IMGS, UXUI_SLIDES, UXUI_CAPTIONS);
+}
+
+let ringBaseRadius = 10.8, tileRadius = 10.8, phiStep = 36, schraegeY = 0, curvature = 1.0, tileScale = 1.0, insideTileScale = 8.0, safeTileScale = 1.0;
+const TILE_FOCUS_SCALE = 1.18;
+let tileWorldGap = 0.48, insideTileGap = 0.48;
+const TILE_RING_FIT_RATIO = 0.92;
+const TRACKPAD_ROT_SPEED = 0.0032;
+const OVERVIEW_SCROLL_SPEED = 0.0044;
+let projectInfoY = 0.76;
+let tileAngles = [];
+let tileLoopAngle = Math.PI * 2;
+
+function tileXfm(theta, phi, r) {
+  const t = theta*DEG, p = phi*DEG;
+  // Sphere surface position
+  const sx =  r*Math.sin(t)*Math.cos(p), sy = r*Math.sin(p), sz = -r*Math.cos(t)*Math.cos(p);
+  // Flat wall position (arc-length equivalent, all at z=-r)
+  const fx = r*t, fy = r*p, fz = -r;
+  // Interpolate position by curvature
+  const c = curvature;
+  const x = fx + (sx-fx)*c, y = fy + (sy-fy)*c, z = fz + (sz-fz)*c;
+  // Sphere rotation (full lookAt)
+  const d = new THREE.Object3D();
+  d.position.set(sx,sy,sz); d.lookAt(0,0,0);
+  // Scale rotation toward zero (flat) by curvature
+  return {
+    pos: [x,y,z],
+    rot: [d.rotation.x*c, d.rotation.y*c, d.rotation.z*c]
+  };
+}
+
+function wrapAngleNear(angle, centerAngle) {
+  return angle + Math.round((centerAngle - angle) / tileLoopAngle) * tileLoopAngle;
+}
+
+function placeTile(mesh, col, row) {
+  const staggerPhi = (Math.abs(col) % 2 !== 0) ? schraegeY * phiStep : 0;
+  const theta = col;
+  const phi   = row * phiStep + staggerPhi;
+  const {pos,rot} = tileXfm(theta / DEG, phi, tileRadius);
+  mesh.position.set(...pos);
+  mesh.rotation.set(rot[0], rot[1], rot[2]);
+}
+
+// ── Renderer ───────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias:false,
+  powerPreference:'high-performance'
+});
+renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 760 ? 1 : 1.25));
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020202);
+
+const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, 0.1, 100);
+camera.position.z = 6.2;
+const clock = new THREE.Clock();
+scene.add(new THREE.AmbientLight(0xffffff, 1.4));
+
+// ── Globe structure ────────────────────────────────────────────────────────────
+const globe     = new THREE.Group();               // rotation only
+const modelsGrp = new THREE.Group();               // Globe Scale
+const tilesGrp  = new THREE.Group();               // Tile sliders
+globe.add(modelsGrp, tilesGrp);
+scene.add(globe);
+
+modelsGrp.scale.setScalar(0.95);
+
+function setRO(obj, order) { obj.traverse(c => { c.renderOrder = order; }); }
+function wf(op) {
+  return new THREE.MeshBasicMaterial({
+    color:0xffffff, wireframe:true, transparent:true, opacity:op, depthWrite:false
+  });
+}
+
+// ── Outer sphere ───────────────────────────────────────────────────────────────
+const outerMat = new THREE.MeshStandardMaterial({
+  color:0x000000, metalness:.8, roughness:.3,
+  transparent:true, opacity:.55, depthWrite:false, side:THREE.FrontSide
+});
+const outerSphere = new THREE.Mesh(new THREE.SphereGeometry(4.5,32,32), outerMat);
+outerSphere.renderOrder = 1; // render early so logo/shell appear on top
+modelsGrp.add(outerSphere);
+
+const shellContainer = new THREE.Group();
+modelsGrp.add(shellContainer);
+let shellOpacity = 0.055;
+let shellTargetOpacity = 0.055;
+let shellPatternKey = 'sphere';
+let shellMaterials = [];
+
+function setShellPattern(key) {
+  shellPatternKey = key;
+  while(shellContainer.children.length) {
+    const child = shellContainer.children.pop();
+    child.geometry?.dispose?.();
+    child.material?.dispose?.();
+  }
+  shellMaterials = [];
+  if(key === 'none') return;
+  const lMat = () => {
+    const mat = new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:shellOpacity,depthWrite:false});
+    shellMaterials.push(mat);
+    return mat;
+  };
+  if(key === 'rings') {
+    // Latitude rings + meridians
+    [-3.5,-2.2,-0.8,0.8,2.2,3.5].forEach(y => {
+      const r = Math.sqrt(Math.max(0, 4.5*4.5 - y*y));
+      if(r < 0.1) return;
+      const pts = Array.from({length:65},(_,i)=>{const a=i/64*Math.PI*2; return new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r);});
+      const ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lMat());
+      ring.renderOrder = 2; shellContainer.add(ring);
+    });
+    for(let i=0;i<10;i++){
+      const a=i/10*Math.PI*2;
+      const pts=Array.from({length:33},(_,j)=>{const p=(j/32-.5)*Math.PI; return new THREE.Vector3(Math.cos(p)*4.5*Math.sin(a),Math.sin(p)*4.5,Math.cos(p)*4.5*Math.cos(a));});
+      const m=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lMat());
+      m.renderOrder=2; shellContainer.add(m);
+    }
+    return;
+  }
+  if(key === 'latitude') {
+    // Breitenkreise only (no meridians)
+    const count = 12;
+    for(let i=1; i<count; i++){
+      const phi = (i/count - 0.5) * Math.PI;
+      const y = 4.5 * Math.sin(phi);
+      const r = 4.5 * Math.cos(phi);
+      if(r < 0.05) continue;
+      const pts = Array.from({length:65},(_,j)=>{const a=j/64*Math.PI*2; return new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r);});
+      const ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lMat());
+      ring.renderOrder = 2; shellContainer.add(ring);
+    }
+    return;
+  }
+  if(key === 'dots') {
+    // Sparse point cloud on sphere surface (~220 points)
+    const N = 220;
+    const pos = [];
+    for(let i=0; i<N; i++){
+      // Fibonacci sphere distribution for even spacing
+      const phi2 = Math.acos(1 - 2*(i+.5)/N);
+      const theta2 = Math.PI * (1 + Math.sqrt(5)) * i;
+      pos.push(4.5*Math.sin(phi2)*Math.cos(theta2), 4.5*Math.cos(phi2), 4.5*Math.sin(phi2)*Math.sin(theta2));
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    const ptMat = new THREE.PointsMaterial({color:0xffffff,transparent:true,opacity:shellOpacity,depthWrite:false,size:0.055});
+    shellMaterials.push(ptMat);
+    const pts = new THREE.Points(geo, ptMat);
+    pts.renderOrder = 2; shellContainer.add(pts);
+    return;
+  }
+  const M = new THREE.MeshBasicMaterial({color:0xffffff,wireframe:true,transparent:true,opacity:shellOpacity,depthWrite:false});
+  shellMaterials.push(M);
+  let geo;
+  if(key === 'sphere') geo = new THREE.SphereGeometry(4.5,24,16);
+  else if(key === 'icosa') geo = new THREE.IcosahedronGeometry(4.5,2);
+  else if(key === 'octa')  geo = new THREE.OctahedronGeometry(4.5,3);
+  const m = new THREE.Mesh(geo, M);
+  m.renderOrder = 2; shellContainer.add(m);
+}
+function setShellOpacity(op) {
+  shellOpacity = op;
+  shellTargetOpacity = op;
+  shellMaterials.forEach(mat => { mat.opacity = op; });
+}
+setShellPattern('latitude');
+
+// ── PIX logo ───────────────────────────────────────────────────────────────────
+const pixCv = document.createElement('canvas');
+pixCv.width = 2086; pixCv.height = 418;
+const pixCtx = pixCv.getContext('2d');
+const pixTex = new THREE.CanvasTexture(pixCv);
+const pixMat = new THREE.MeshBasicMaterial({map:pixTex, transparent:true, opacity:0, depthWrite:false, side:THREE.DoubleSide});
+const pixMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.8,.56), pixMat);
+pixMesh.renderOrder = 5;
+loadImageAny(PIX_SVG_CANDIDATES, svgImg => {
+  pixCtx.clearRect(0,0,2086,418);
+  pixCtx.drawImage(svgImg,0,0,2086,418);
+  pixTex.needsUpdate = true;
+});
+
+// ── 3D Model builders ──────────────────────────────────────────────────────────
+
+function buildMonitor() {
+  const g = new THREE.Group();
+  g.position.y = 0.15;
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(2.1,1.35,.06), wf(.22)));
+  const gl = new THREE.Mesh(new THREE.PlaneGeometry(1.88,1.12),
+    new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.04,depthWrite:false}));
+  gl.position.set(0,.04,.034); g.add(gl);
+  const neck = new THREE.Mesh(new THREE.BoxGeometry(.09,.4,.05), wf(.16));
+  neck.position.set(0,-.85,-.01); g.add(neck);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(.88,.07,.38), wf(.18));
+  base.position.set(0,-1.06,-.06); g.add(base);
+  return g;
+}
+
+function buildCamera() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.6,1.0,.68), wf(.2)));
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(.38,1.0,.78), wf(.14));
+  grip.position.set(-.62,0,0); g.add(grip);
+  const lh = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.04,24), wf(.18));
+  lh.rotation.x=Math.PI/2; lh.position.set(.25,0,.36); g.add(lh);
+  const lb = new THREE.Mesh(new THREE.CylinderGeometry(.28,.30,.22,24), wf(.26));
+  lb.rotation.x=Math.PI/2; lb.position.set(.25,0,.46); g.add(lb);
+  const vf = new THREE.Mesh(new THREE.BoxGeometry(.28,.17,.07), wf(.22));
+  vf.position.set(.54,.3,.38); g.add(vf);
+  const sh = new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.1,10), wf(.22));
+  sh.position.set(.15,.58,0); g.add(sh);
+  return g;
+}
+
+function buildPhone() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(.68,1.42,.09), wf(.22)));
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(.60,1.26),
+    new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.04,depthWrite:false}));
+  screen.position.z = .047; g.add(screen);
+  // camera module back
+  const camMod = new THREE.Mesh(new THREE.BoxGeometry(.24,.24,.03), wf(.18));
+  camMod.position.set(-.12,.52,-.055); g.add(camMod);
+  const camLens = new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.04,12), wf(.24));
+  camLens.rotation.x=Math.PI/2; camLens.position.set(-.07,.52,-.07); g.add(camLens);
+  const camLens2 = new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.04,12), wf(.16));
+  camLens2.rotation.x=Math.PI/2; camLens2.position.set(.06,.52,-.07); g.add(camLens2);
+  // home bar
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(.22,.025,.01), wf(.15));
+  bar.position.set(0,-.63,.048); g.add(bar);
+  // side buttons
+  const btnR = new THREE.Mesh(new THREE.BoxGeometry(.02,.2,.02), wf(.14));
+  btnR.position.set(.35,.1,.0); g.add(btnR);
+  const btnL = new THREE.Mesh(new THREE.BoxGeometry(.02,.28,.02), wf(.12));
+  btnL.position.set(-.35,-.05,.0); g.add(btnL);
+  return g;
+}
+
+function buildLaptop() {
+  const g = new THREE.Group();
+  g.position.y = -.12;
+  // Base
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.7,.07,1.1), wf(.2)));
+  // Trackpad
+  const pad = new THREE.Mesh(new THREE.BoxGeometry(.44,.03,.32), wf(.14));
+  pad.position.set(0,.04,.2); g.add(pad);
+  // Screen panel
+  const scrn = new THREE.Mesh(new THREE.BoxGeometry(1.7,1.1,.05), wf(.22));
+  scrn.position.set(0,.62,-.53); scrn.rotation.x=.22; g.add(scrn);
+  // Screen glass
+  const sgl = new THREE.Mesh(new THREE.PlaneGeometry(1.54,.96),
+    new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.04,depthWrite:false}));
+  sgl.position.set(0,.62,-.50); sgl.rotation.x=.22; g.add(sgl);
+  // Hinge
+  const hinge = new THREE.Mesh(new THREE.BoxGeometry(1.7,.05,.05), wf(.16));
+  hinge.position.set(0,.06,-.53); g.add(hinge);
+  // Keyboard rows (3 subtle lines)
+  for (let i=0; i<3; i++) {
+    const row = new THREE.Mesh(new THREE.BoxGeometry(1.2,.01,.01), wf(.09));
+    row.position.set(0,.04,-.18+i*.18); g.add(row);
+  }
+  return g;
+}
+
+function buildFilmCam() {
+  const g = new THREE.Group();
+  // Body
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.4,.85,.52), wf(.2)));
+  // Large lens
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.28,22), wf(.26));
+  lens.rotation.x=Math.PI/2; lens.position.set(-.12,.04,.37); g.add(lens);
+  const lensIn = new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.30,16), wf(.18));
+  lensIn.rotation.x=Math.PI/2; lensIn.position.set(-.12,.04,.38); g.add(lensIn);
+  // Viewfinder
+  const vf = new THREE.Mesh(new THREE.BoxGeometry(.2,.15,.1), wf(.2));
+  vf.position.set(.44,.3,.27); g.add(vf);
+  // Rangefinder
+  const rf = new THREE.Mesh(new THREE.BoxGeometry(.1,.08,.07), wf(.16));
+  rf.position.set(.18,.3,.29); g.add(rf);
+  // Film advance dial
+  const dial = new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,.1,12), wf(.18));
+  dial.position.set(.52,.5,0); g.add(dial);
+  // Rewind knob
+  const knob = new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.09,10), wf(.16));
+  knob.position.set(-.52,.5,0); g.add(knob);
+  // Strap lugs
+  const lugL = new THREE.Mesh(new THREE.BoxGeometry(.06,.15,.06), wf(.13));
+  lugL.position.set(-.73,.28,0); g.add(lugL);
+  const lugR = lugL.clone(); lugR.position.set(.73,.28,0); g.add(lugR);
+  return g;
+}
+
+function buildIMac() {
+  const g = new THREE.Group();
+  g.position.y = 0.08;
+  // Ultra-thin display
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(2.5,1.5,.04), wf(.22)));
+  // Screen glass
+  const gl = new THREE.Mesh(new THREE.PlaneGeometry(2.36,1.36),
+    new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.04,depthWrite:false}));
+  gl.position.z=.022; g.add(gl);
+  // Chin strip
+  const chin = new THREE.Mesh(new THREE.BoxGeometry(2.5,.18,.04), wf(.15));
+  chin.position.set(0,-.84,0); g.add(chin);
+  // Curved arm
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.52,10), wf(.15));
+  arm.position.set(0,-1.18,-.12); arm.rotation.x=.22; g.add(arm);
+  // Oval base
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(.58,.64,.055,28), wf(.17));
+  base.position.set(0,-1.48,-.16); g.add(base);
+  return g;
+}
+
+function buildCrystal() { // Quartz crystal
+  const g = new THREE.Group();
+  g.position.y = -.05;
+  // Hexagonal prism body
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(.34,.44,.88,6), wf(.22));
+  g.add(body);
+  // Pointed tip
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(.34,.72,6), wf(.26));
+  tip.position.y = .8; g.add(tip);
+  // Base chamfer
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(.44,.28,.2,6), wf(.16));
+  base.position.y = -.54; base.rotation.x = Math.PI; g.add(base);
+  // Equatorial belt
+  const belt = new THREE.Mesh(new THREE.TorusGeometry(.44,.013,4,6), wf(.13));
+  belt.rotation.x = Math.PI/2; g.add(belt);
+  return g;
+}
+
+function buildDiamond() { // Cut diamond
+  const g = new THREE.Group();
+  g.scale.setScalar(1.05);
+  // Table (top facet)
+  const table = new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.02,8), wf(.28));
+  table.position.y = .66; g.add(table);
+  // Crown
+  const crown = new THREE.Mesh(new THREE.CylinderGeometry(.22,.82,.56,8), wf(.24));
+  crown.position.y = .38; g.add(crown);
+  // Girdle
+  const girdle = new THREE.Mesh(new THREE.CylinderGeometry(.82,.82,.04,8), wf(.2));
+  girdle.position.y = .08; g.add(girdle);
+  // Pavilion (inverted cone)
+  const pav = new THREE.Mesh(new THREE.ConeGeometry(.82,.98,8), wf(.22));
+  pav.position.y = -.41; pav.rotation.x = Math.PI; g.add(pav);
+  return g;
+}
+
+function buildPrism() { // Irregular 5-corner form — one spike prominent, one side wider
+  const g = new THREE.Group();
+  g.rotation.z = -0.75; // ~43° tilt
+  function elongate(geo, targetAngle, factor) {
+    const pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), z = pos.getZ(i);
+      if (Math.abs(x) < 0.001 && Math.abs(z) < 0.001) continue;
+      const a = Math.atan2(z, x);
+      const diff = Math.abs(((a - targetAngle) + Math.PI) % (2 * Math.PI) - Math.PI);
+      if (diff < 0.45) { pos.setX(i, x * factor); pos.setZ(i, z * factor); }
+    }
+    pos.needsUpdate = true;
+  }
+  const SPIKE_ANGLE = Math.PI * 0.5;
+  // Open-ended body (no cap faces = no star artifact)
+  const bodyGeo = new THREE.CylinderGeometry(.64, .64, 1.05, 5, 1, true);
+  elongate(bodyGeo, SPIKE_ANGLE, 1.6);
+  g.add(new THREE.Mesh(bodyGeo, wf(.22)));
+  // Top pyramid
+  const topGeo = new THREE.ConeGeometry(.64, .82, 5);
+  elongate(topGeo, SPIKE_ANGLE, 1.6);
+  const top = new THREE.Mesh(topGeo, wf(.25));
+  top.position.y = .93; g.add(top);
+  return g;
+}
+
+function buildPrism2() { // Minimal triangle with concave depth — just outline + 3 depth lines
+  const g = new THREE.Group();
+  g.rotation.z = -0.75;
+  const lm = op => new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:op,depthWrite:false});
+  const r = 0.95;
+  const A = new THREE.Vector3(0, r, 0);
+  const B = new THREE.Vector3(-r*0.866, -r*0.5, 0);
+  const C = new THREE.Vector3( r*0.866, -r*0.5, 0);
+  const M = new THREE.Vector3(0, -0.06, -0.38); // center pushed back = depth
+  // Outer triangle
+  g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([A,B,C]), lm(0.3)));
+  // 3 lines to center → creates the depth illusion
+  g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([A,M,B,M,C,M]), lm(0.18)));
+  return g;
+}
+
+function buildCompact2() { // Compact camera V2 — box body + two clean circle rings, slight tilt
+  const g = new THREE.Group();
+  g.rotation.z = 0.22; g.rotation.x = -0.15;
+  const lm = op => new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:op,depthWrite:false});
+  function ring(r, segs=30) {
+    const pts = Array.from({length:segs+1},(_,i)=>{const a=i/segs*Math.PI*2; return new THREE.Vector3(Math.cos(a)*r,Math.sin(a)*r,0);});
+    return new THREE.BufferGeometry().setFromPoints(pts);
+  }
+  // Body
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.58,0.82,0.3), wf(0.2)));
+  // Outer lens circle
+  const lo = new THREE.Line(ring(0.26), lm(0.3));
+  lo.position.set(-0.15,0.04,0.16); g.add(lo);
+  // Inner lens circle
+  const li = new THREE.Line(ring(0.13), lm(0.2));
+  li.position.set(-0.15,0.04,0.17); g.add(li);
+  // Shutter dot (tiny circle on top edge)
+  const sh = new THREE.Line(ring(0.07,12), lm(0.16));
+  sh.rotation.x = Math.PI/2; sh.position.set(0.55,0.43,0); g.add(sh);
+  return g;
+}
+
+function buildCompact() {
+  const g = new THREE.Group();
+  // Flat compact body
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.65,.9,.38), wf(.2)));
+  // Lens barrel
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.14,20), wf(.24));
+  lens.rotation.x=Math.PI/2; lens.position.set(-.15,.02,.28); g.add(lens);
+  const lensRing = new THREE.Mesh(new THREE.TorusGeometry(.22,.016,5,20), wf(.3));
+  lensRing.position.set(-.15,.02,.34); g.add(lensRing);
+  // Flash unit
+  const flash = new THREE.Mesh(new THREE.BoxGeometry(.28,.15,.04), wf(.15));
+  flash.position.set(.52,.26,.21); g.add(flash);
+  // Shutter button
+  const shutter = new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.04,10), wf(.18));
+  shutter.position.set(.58,.51,0); g.add(shutter);
+  // Viewfinder
+  const vf = new THREE.Mesh(new THREE.BoxGeometry(.18,.11,.04), wf(.13));
+  vf.position.set(-.54,.3,.21); g.add(vf);
+  return g;
+}
+
+const MODEL_BUILDERS = {
+  imac:     buildIMac,
+  monitor:  buildMonitor,
+  crystal:  buildCrystal,
+  diamond:  buildDiamond,
+  prism:    buildPrism,
+  prism2:   buildPrism2,
+  laptop:   buildLaptop,
+  filmcam:  buildFilmCam,
+  camera:   buildCamera,
+  phone:    buildPhone,
+  compact:  buildCompact,
+  compact2: buildCompact2,
+};
+
+// ── Model container groups (one per zone) ──────────────────────────────────────
+const uxModelGrp   = new THREE.Group(); uxModelGrp.rotation.y   = -worldAngle; uxModelGrp.visible = false;
+const fotoModelGrp = new THREE.Group(); fotoModelGrp.rotation.y =  worldAngle; fotoModelGrp.visible = false;
+modelsGrp.add(uxModelGrp, fotoModelGrp);
+
+function loadModel(grp, key) {
+  while (grp.children.length) grp.remove(grp.children[0]);
+  const model = MODEL_BUILDERS[key]();
+  setRO(model, 5);
+  grp.add(model);
+}
+loadModel(uxModelGrp,   'prism2');
+loadModel(fotoModelGrp, 'compact2');
+// Apply default scale values matching the panel sliders
+uxModelGrp.scale.setScalar(3.25);
+fotoModelGrp.scale.setScalar(3.25);
+
+// ── Zone labels ────────────────────────────────────────────────────────────────
+function makeLabel(text) {
+  const dpr = Math.min(devicePixelRatio,2), W=2048, H=512;
+  const cv = document.createElement('canvas');
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  ctx.font=`800 ${Math.round(H*.55)}px Helvetica Neue,Arial,sans-serif`;
+  ctx.fillStyle='white'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text,W/2,H/2);
+  const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,opacity:.28,depthWrite:false,side:THREE.DoubleSide});
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(6,1.5),mat);
+  mesh.renderOrder=5;
+  return {mesh,mat};
+}
+
+const {mesh:lblUX,   mat:lblUXMat  }=makeLabel('UX');
+const {mesh:lblFoto, mat:lblFotoMat}=makeLabel('Foto');
+const LR=4.6;
+const PIX_LABEL_ANGLE = 0;
+const PIX_TO_LABEL_HEIGHT = 1.07;
+let lblZ = 0;
+function placeLbls() {
+  const r = LR + lblZ;
+  lblUX.position.set(  Math.sin(-worldAngle)*r, 0, Math.cos(-worldAngle)*r);
+  lblUX.rotation.y   = -worldAngle;
+  lblFoto.position.set(Math.sin( worldAngle)*r, 0, Math.cos( worldAngle)*r);
+  lblFoto.rotation.y =  worldAngle;
+  pixMesh.position.set(Math.sin(PIX_LABEL_ANGLE)*r, 0, Math.cos(PIX_LABEL_ANGLE)*r);
+  pixMesh.rotation.y = PIX_LABEL_ANGLE;
+}
+placeLbls();
+modelsGrp.add(lblUX, lblFoto, pixMesh);
+// Apply default label scale
+lblUX.scale.setScalar(0.60); lblFoto.scale.setScalar(0.60); pixMesh.scale.setScalar(0.60 * PIX_TO_LABEL_HEIGHT);
+
+function setWorldAngle(a) {
+  worldAngle = a;
+  uxModelGrp.rotation.y    = -worldAngle;
+  fotoModelGrp.rotation.y  =  worldAngle;
+  uxuiTiles.grp.rotation.y = -worldAngle;
+  fotoTiles.grp.rotation.y =  worldAngle;
+  placeLbls();
+  if(activeWorld === 'uxui') targetRotY =  worldAngle;
+  if(activeWorld === 'foto') targetRotY = -worldAngle;
+}
+
+// ── Photo tiles ────────────────────────────────────────────────────────────────
+const texLoader = new THREE.TextureLoader();
+THREE.Cache.enabled = true;
+const textureCache = new Map();
+
+function tuneTexture(tex) {
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.generateMipmaps = false;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 1;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  return tex;
+}
+
+function loadTextureAny(source, onLoad) {
+  const urls = Array.isArray(source) ? source : [source];
+  const key = urls.join('|');
+  if (textureCache.has(key)) {
+    textureCache.get(key).then(onLoad);
+    return;
+  }
+  const promise = new Promise(resolve => {
+    const tryLoad = idx => {
+      if (idx >= urls.length) return;
+      texLoader.load(urls[idx], tex => resolve(tuneTexture(tex)), undefined, () => tryLoad(idx + 1));
+    };
+    tryLoad(0);
+  });
+  textureCache.set(key, promise);
+  promise.then(onLoad);
+}
+
+function preloadTextureAny(source) {
+  loadTextureAny(source, () => {});
+}
+
+function loadImageAny(urls, onLoad) {
+  const list = Array.isArray(urls) ? urls : [urls];
+  const tryLoad = idx => {
+    if (idx >= list.length) return;
+    const img = new Image();
+    img.onload = () => onLoad(img, list[idx]);
+    img.onerror = () => tryLoad(idx + 1);
+    img.src = list[idx];
+  };
+  tryLoad(0);
+}
+
+function applyTexOriginal(mat, tex, imageMesh, maxW, maxH) {
+  tuneTexture(tex);
+  const iw = tex.image.naturalWidth || tex.image.width;
+  const ih = tex.image.naturalHeight || tex.image.height;
+  const imgA = iw / ih;
+  const boxA = maxW / maxH;
+  let drawW, drawH;
+  if (imgA > boxA) {
+    drawW = maxW;
+    drawH = maxW / imgA;
+  } else {
+    drawH = maxH;
+    drawW = maxH * imgA;
+  }
+  tex.repeat.set(1, 1);
+  tex.offset.set(0, 0);
+  imageMesh.geometry.dispose();
+  imageMesh.geometry = new THREE.PlaneGeometry(drawW, drawH);
+  imageMesh.userData.drawW = drawW;
+  imageMesh.userData.drawH = drawH;
+  mat.map = tex;
+  mat.needsUpdate = true;
+  applySafeTileScale();
+}
+
+function applyTileLayout() {
+  computeRingLayout();
+  for (const {items} of [uxuiTiles, fotoTiles]) {
+    items.forEach(({mesh},i) => {
+      const {row} = TILE_GRID[i];
+      placeTile(mesh, tileAngles[i] || 0, row);
+    });
+  }
+  applySafeTileScale();
+}
+
+function getItemDrawWidth(item) {
+  return item.imageMesh.userData.drawW || item.imageMesh.geometry.parameters?.width || item.w || W;
+}
+
+function computeRingLayout() {
+  const sourceItems = fotoTiles?.items?.length ? fotoTiles.items : uxuiTiles?.items || [];
+  if (!sourceItems.length) return;
+  const layoutScale = level === 3 ? insideTileScale : tileScale;
+  const layoutGap = level === 3 ? insideTileGap : tileWorldGap;
+  const baseWidths = sourceItems.map(item => getItemDrawWidth(item) * TILE_FOCUS_SCALE * 1.08);
+  const widthArc = baseWidths.reduce((sum, w) => sum + w, 0) * layoutScale;
+  const minGapArc = sourceItems.length * layoutGap;
+  const wantedArc = widthArc + minGapArc;
+  const baseCircumference = Math.PI * 2 * ringBaseRadius * TILE_RING_FIT_RATIO;
+  const circumference = Math.max(baseCircumference, wantedArc);
+  const layoutRadius = circumference / (Math.PI * 2 * TILE_RING_FIT_RATIO);
+  safeTileScale = layoutScale;
+  const scaledWidths = baseWidths.map(w => w * layoutScale);
+  const usedWidthArc = scaledWidths.reduce((sum, w) => sum + w, 0);
+  const evenGap = Math.max(layoutGap, (circumference - usedWidthArc) / sourceItems.length);
+  const angles = [];
+  let cursor = 0;
+  for (let i = 0; i < sourceItems.length; i++) {
+    const prevWidth = i === 0 ? scaledWidths[sourceItems.length - 1] : scaledWidths[i - 1];
+    const width = scaledWidths[i];
+    if (i === 0) cursor = 0;
+    else cursor += ((prevWidth + width) * 0.5 + evenGap) / layoutRadius;
+    angles.push(cursor);
+  }
+  tileLoopAngle = Math.PI * 2;
+  const overviewCenter = angles[5] || 0;
+  tileAngles = angles.map(a => a - overviewCenter);
+  tileRadius = layoutRadius;
+}
+
+function applySafeTileScale() {
+  computeRingLayout();
+  for(const {items} of [uxuiTiles,fotoTiles]) {
+    for(const {mesh} of items) mesh.scale.setScalar(safeTileScale);
+  }
+}
+
+function updateTileFocus(dt) {
+  for(const tiles of [uxuiTiles, fotoTiles]) {
+    const active = (tiles === uxuiTiles && activeWorld === 'uxui') || (tiles === fotoTiles && activeWorld === 'foto');
+    const isInside = active && level === 3;
+    const groupAngle = tiles.grp.rotation.y + globe.rotation.y;
+    const centerAngle = -groupAngle;
+    let maxFocus = -1, focusedIdx = -1;
+    tiles.items.forEach((item, i) => {
+      const {row} = TILE_GRID[i];
+      const baseAngle = tileAngles[i] || 0;
+      const effectiveAngle = isInside ? wrapAngleNear(baseAngle, centerAngle) : baseAngle;
+      const distAngle = Math.abs(effectiveAngle - centerAngle);
+      const focusWindow = Math.max(0.18, tileLoopAngle / TILE_GRID.length * 0.95);
+      const focus = isInside ? Math.max(0, 1 - distAngle / focusWindow) : 0;
+      if (focus > maxFocus) { maxFocus = focus; focusedIdx = i; }
+
+      const desiredScale = safeTileScale;
+      const focusBoost = 0;
+      const groupScale = desiredScale * (isInside ? (1 + focus * (TILE_FOCUS_SCALE - 1) * focusBoost) : 1);
+      const nextScale = damp(item.mesh.scale.x, groupScale, 10, dt);
+      item.mesh.scale.setScalar(nextScale);
+      item.slideMeshes.forEach(slideMesh => {
+        slideMesh.scale.x = damp(slideMesh.scale.x, 1, 10, dt);
+        slideMesh.scale.y = damp(slideMesh.scale.y, 1, 10, dt);
+        slideMesh.scale.z = 1;
+      });
+      placeTile(item.mesh, effectiveAngle, row);
+    });
+    if (active) {
+      stickyTextState.tileIdx = focusedIdx;
+      stickyTextState.focus = maxFocus;
+    }
+  }
+}
+
+const projectInfoEl = document.getElementById('project-info');
+const projectKickerEl = document.getElementById('project-kicker');
+const projectTitleEl = document.getElementById('project-title');
+const projectBodyEl = document.getElementById('project-body');
+const projectBarsEl = document.getElementById('project-bars');
+const projectLinkEl = document.getElementById('project-link');
+let currentProjectInfoKey = '';
+let projectInfoFadeKey = '';
+let projectInfoOpacity = 0;
+let currentProjectBarsKey = '';
+
+function setProjectInfo(cfg, key) {
+  if (currentProjectInfoKey === key) return;
+  currentProjectInfoKey = key;
+  projectKickerEl.textContent = cfg.category || 'Projekt';
+  projectTitleEl.textContent = cfg.title || '';
+  projectBodyEl.textContent = cfg.body || '';
+  projectLinkEl.textContent = cfg.button ? `${cfg.button} ->` : 'Projekt anfragen ->';
+  projectLinkEl.href = cfg.href || CONTACT_HREF;
+  projectLinkEl.style.display = 'inline-block';
+}
+
+function setProjectBars(count, activeIdx) {
+  const safeCount = Math.max(0, count || 0);
+  const key = `${safeCount}-${activeIdx}`;
+  if (currentProjectBarsKey === key) return;
+  currentProjectBarsKey = key;
+  projectBarsEl.innerHTML = '';
+  projectBarsEl.style.display = safeCount > 1 ? 'flex' : 'none';
+  for (let i = 0; i < safeCount; i++) {
+    const bar = document.createElement('span');
+    if (i === activeIdx) bar.className = 'active';
+    projectBarsEl.appendChild(bar);
+  }
+}
+
+function updateProjectInfo(dt) {
+  if (level !== 3 || !activeWorld || stickyTextState.textIdx < 0) {
+    projectInfoOpacity = damp(projectInfoOpacity, 0, 10, dt);
+    projectInfoEl.style.opacity = projectInfoOpacity.toFixed(3);
+    projectInfoEl.classList.toggle('visible', projectInfoOpacity > 0.03);
+    currentProjectInfoKey = '';
+    projectInfoFadeKey = '';
+    currentProjectBarsKey = '';
+    projectBarsEl.innerHTML = '';
+    return;
+  }
+  const tiles = activeWorld === 'foto' ? fotoTiles : uxuiTiles;
+  const textIdx = stickyTextState.textIdx;
+  const candidateItem = tiles.items[textIdx];
+  if (!candidateItem || !candidateItem.captionCfg) {
+    projectInfoOpacity = damp(projectInfoOpacity, 0, 10, dt);
+    projectInfoEl.style.opacity = projectInfoOpacity.toFixed(3);
+    projectInfoEl.classList.toggle('visible', projectInfoOpacity > 0.03);
+    currentProjectInfoKey = '';
+    projectInfoFadeKey = '';
+    currentProjectBarsKey = '';
+    projectBarsEl.innerHTML = '';
+    return;
+  }
+  const nextKey = `${activeWorld}-${textIdx}`;
+  const focusStrength = stickyTextState.focus || 0;
+  const isLocked = !isInteractingTiles && focusStrength > 0.86 && Math.abs(globe.rotation.y - targetRotY) < 0.012;
+  if (projectInfoFadeKey !== nextKey && projectInfoOpacity < 0.08 && isLocked) {
+    projectInfoFadeKey = nextKey;
+    setProjectInfo(candidateItem.captionCfg, nextKey);
+  } else if (!projectInfoFadeKey) {
+    projectInfoFadeKey = nextKey;
+    setProjectInfo(candidateItem.captionCfg, nextKey);
+  }
+  const nextOpacity = projectInfoFadeKey === nextKey && isLocked ? 1 : 0;
+  setProjectBars(candidateItem.autoplay ? candidateItem.slideMats?.length || 1 : 1, candidateItem.activeSlide || 0);
+  projectInfoOpacity = damp(projectInfoOpacity, nextOpacity, 9, dt);
+  projectInfoEl.style.left = '50%';
+  projectInfoEl.style.top = `${clamp(innerHeight * projectInfoY, innerHeight * 0.56, innerHeight - 150).toFixed(1)}px`;
+  projectInfoEl.style.width = `${Math.min(540, innerWidth * 0.72).toFixed(1)}px`;
+  projectInfoEl.style.opacity = projectInfoOpacity.toFixed(3);
+  projectInfoEl.classList.toggle('visible', projectInfoOpacity > 0.03);
+}
+
+const SLIDE_INTERVAL_MS = 8400;
+const SLIDE_FADE_SPEED = 2.0;
+function updateItemSlides(item, imageTgt, dt, canRotate) {
+  const count = item.slideMats?.length || 1;
+  let activeSlide = 0;
+  if (canRotate && item.autoplay && count > 1) {
+    activeSlide = Math.floor((performance.now() + item.slideOffset) / SLIDE_INTERVAL_MS) % count;
+  }
+  item.activeSlide = activeSlide;
+  item.slideMats.forEach((mat, idx) => {
+    const slideTgt = imageTgt * (idx === activeSlide ? 1 : 0);
+    const mesh = item.slideMeshes[idx];
+    if (slideTgt > 0.001) mesh.visible = true;
+    mat.opacity = damp(mat.opacity, slideTgt, canRotate ? SLIDE_FADE_SPEED : 8, dt);
+    if (slideTgt <= 0.001 && mat.opacity < 0.003) mesh.visible = false;
+  });
+}
+
+function getTileSlideSources(imgs, slideCfgs, i) {
+  const configured = slideCfgs && slideCfgs[i];
+  const sources = (configured || [imgs[i]]).filter(Boolean);
+  sources.autoplay = sources.length > 1;
+  return sources;
+}
+
+function makeTiles(imgs, yRot, captionCfgs, slideCfgs) {
+  const grp=new THREE.Group(); grp.rotation.y=yRot;
+  const mats=[], items=[];
+  TILE_GRID.forEach(({w,h,extra},i) => {
+    const mesh = new THREE.Group();
+    const slideSources = getTileSlideSources(imgs, slideCfgs, i);
+    const renderSources = slideSources.length > 1 ? slideSources : slideSources.slice(0, 1);
+    renderSources.autoplay = renderSources.length > 1;
+    const slideMeshes = [];
+    const itemMats = [];
+    renderSources.forEach((source, slideIdx) => {
+      const mat = new THREE.MeshBasicMaterial({transparent:true, opacity:0, depthWrite:false, side:THREE.FrontSide});
+      const imageMesh = new THREE.Mesh(new THREE.PlaneGeometry(w,h), mat);
+      imageMesh.visible = false;
+      imageMesh.renderOrder = slideIdx;
+      imageMesh.position.z = slideIdx * 0.002;
+      mesh.add(imageMesh);
+      slideMeshes.push(imageMesh);
+      itemMats.push(mat);
+    });
+    if (!slideMeshes.length) {
+      const mat = new THREE.MeshBasicMaterial({transparent:true, opacity:0, depthWrite:false, side:THREE.FrontSide});
+      const imageMesh = new THREE.Mesh(new THREE.PlaneGeometry(w,h), mat);
+      imageMesh.visible = false;
+      mesh.add(imageMesh);
+      slideMeshes.push(imageMesh);
+      itemMats.push(mat);
+    }
+    const imageMesh = slideMeshes[0];
+    const item = {
+      mesh, imageMesh, slideMeshes, img: imgs[i], slideSources: renderSources,
+      loadedSlides: new Array(renderSources.length).fill(false),
+      texLoaded: TILE_GRID[i].strip, w, h, slideMats:itemMats,
+      activeSlide: 0, slideOffset: (i * 3371 + Math.round(Math.abs(yRot) * 1000)) % SLIDE_INTERVAL_MS, autoplay: !!renderSources.autoplay,
+      captionCfg: captionCfgs && captionCfgs[i]
+    };
+    // Overview tiles load immediately; extended row loads lazily on level-3 enter.
+    if (slideSources[0] && TILE_GRID[i].strip) {
+      loadTextureAny(slideSources[0], tex => {
+        applyTexOriginal(itemMats[0], tex, slideMeshes[0], w, h);
+        item.loadedSlides[0] = true;
+      });
+    }
+    grp.add(mesh); itemMats.forEach(mat => mats.push(mat));
+    items.push(item);
+  });
+  return {grp,mats,items};
+}
+
+// ── App state ──────────────────────────────────────────────────────────────────
+let level=1, activeWorld=null, targetRotY=0, targetCamZ=6.2;
+const L3_PAN_UNLIMITED = true; // Endless scroll/rotation
+let stickyTextState = { tileIdx: -1, focus: 0, lockedIdx: -1, textIdx: -1 }; // For sticky text tracking
+const CAMERA_OVERVIEW_Z = 5.7;
+const CAMERA_PRE_DIVE_Z = 5.18;
+const CAMERA_WORLD_Z = 1.72;
+const CAMERA_WORLD_MIN_Z = 1.72;
+const CAMERA_WORLD_MAX_Z = 5.35;
+const DIVE_SCROLL_THRESHOLD = 165;
+const EXIT_SCROLL_THRESHOLD = 140;
+let diveScroll = 0;
+let exitScroll = 0;
+let wheelSnapTimer = null;
+let wheelAccumX = 0;
+let lastWheelAdvance = 0;
+const WHEEL_TILE_THRESHOLD = 60;   // px deltaX to trigger one tile advance
+const WHEEL_COOLDOWN = 240;        // ms between advances
+let magneticDive = false;
+let tileSettleTimer = null;
+let isInteractingTiles = false;
+
+const uxuiTiles = makeTiles(UXUI_IMGS, -worldAngle, UXUI_CAPTIONS, UXUI_SLIDES);
+const fotoTiles = makeTiles(FOTO_IMGS,  worldAngle, FOTO_CAPTIONS, FOTO_SLIDES);
+tilesGrp.add(uxuiTiles.grp, fotoTiles.grp);
+applyTileLayout();
+
+function loadExtraTextures(tiles) {
+  // Stage texture uploads so entering a world does not hitch on many image decodes at once.
+  const queue = [];
+  tiles.items.forEach(item => {
+    item.slideSources.forEach((source, idx) => {
+      if (!item.autoplay && idx > 0) return;
+      if (item.loadedSlides[idx] || !source) return;
+      queue.push({item, source, idx});
+    });
+    item.texLoaded = true;
+  });
+  queue.forEach((job, order) => {
+    setTimeout(() => {
+      loadTextureAny(job.source, tex => {
+        applyTexOriginal(job.item.slideMats[job.idx], tex, job.item.slideMeshes[job.idx], job.item.w, job.item.h);
+        job.item.loadedSlides[job.idx] = true;
+      });
+    }, order * 55);
+  });
+}
+
+function resetInsideTileScales(tiles) {
+  tiles.items.forEach(item => {
+    item.mesh.scale.setScalar(insideTileScale);
+    item.slideMeshes.forEach(mesh => mesh.scale.set(1, 1, 1));
+  });
+}
+
+function wheelDelta(e) {
+  const unit = e.deltaMode === 1 ? 16 : (e.deltaMode === 2 ? innerHeight : 1);
+  return {dx: e.deltaX * unit, dy: e.deltaY * unit};
+}
+
+function scheduleTileSettle(dx) {
+  clearTimeout(tileSettleTimer);
+  isInteractingTiles = true;
+  tileSettleTimer = setTimeout(() => {
+    if(level !== 3 || !activeWorld) return;
+    const tiles = activeWorld === 'uxui' ? uxuiTiles : fotoTiles;
+    snapToNearestLoopTile(tiles, -dx);
+    isInteractingTiles = false;
+  }, 220);
+}
+
+function settleActiveTile(delay = 80) {
+  clearTimeout(tileSettleTimer);
+  tileSettleTimer = setTimeout(() => {
+    if(level !== 3 || !activeWorld) return;
+    const tiles = activeWorld === 'uxui' ? uxuiTiles : fotoTiles;
+    snapToNearestLoopTile(tiles, 0);
+    isInteractingTiles = false;
+  }, delay);
+}
+
+const btnExpand=document.getElementById('btn-expand');
+const btnBack  =document.getElementById('btn-back');
+
+// Store initial rotation for each world when entering level 3
+const worldInitialRotation = { uxui: null, foto: null };
+
+// ── Level transitions ──────────────────────────────────────────────────────────
+function setWorld(w) {
+  activeWorld=w;
+  document.body.classList.toggle('has-world', !!w);
+  uxModelGrp.visible   = (w==='uxui');
+  fotoModelGrp.visible = (w==='foto');
+  if(w){
+    btnExpand.classList.add('visible');
+  } else {
+    btnExpand.classList.remove('visible');
+  }
+}
+
+const vignetteEl = document.getElementById('vignette');
+
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function normalizeRotation(angle) {
+  // Keep rotation in -π to +π range for consistent display
+  while (angle > Math.PI) angle -= 2 * Math.PI;
+  while (angle < -Math.PI) angle += 2 * Math.PI;
+  return angle;
+}
+
+function snapToNearestTile(tiles, flick = 0) {
+  // Snap targetRotY so exactly one tile is centered (closest TILE_GRID col).
+  const groupAngle = tiles.grp.rotation.y + globe.rotation.y;
+  const currentAngle = -groupAngle;
+  let nearestIdx = 0, minDist = Infinity;
+  for (let i = 0; i < TILE_GRID.length; i++) {
+    const d = Math.abs((tileAngles[i] || 0) - currentAngle);
+    if (d < minDist) { minDist = d; nearestIdx = i; }
+  }
+  if (Math.abs(flick) > 30) {
+    const dir = flick > 0 ? -1 : 1;
+    nearestIdx = Math.max(0, Math.min(TILE_GRID.length - 1, nearestIdx + dir));
+  }
+  const targetGroupAngle = -(tileAngles[nearestIdx] || 0);
+  targetRotY = normalizeRotation(targetGroupAngle - tiles.grp.rotation.y);
+}
+
+function snapToNearestLoopTile(tiles, flick = 0) {
+  const groupAngleTarget = tiles.grp.rotation.y + targetRotY;
+  const currentAngle = -groupAngleTarget;
+  let nearestAngle = tileAngles[0] || 0, nearestIdx = 0, minDist = Infinity;
+  for (let i = 0; i < TILE_GRID.length; i++) {
+    const angle = wrapAngleNear(tileAngles[i] || 0, currentAngle);
+    const d = Math.abs(angle - currentAngle);
+    if (d < minDist) { minDist = d; nearestAngle = angle; nearestIdx = i; }
+  }
+  const targetGroupAngle = -nearestAngle;
+  targetRotY = targetGroupAngle - tiles.grp.rotation.y;
+  stickyTextState.lockedIdx = nearestIdx;
+  stickyTextState.textIdx = nearestIdx;
+}
+
+function advanceTile(tiles, dir) {
+  // Move targetRotY exactly one TILE_GRID slot in the given direction (+1 or -1).
+  // Use targetRotY (not damped globe.rotation.y) so rapid bursts accumulate.
+  const groupAngleTarget = tiles.grp.rotation.y + targetRotY;
+  const targetAngle = -groupAngleTarget;
+  let nearestIdx = 0, minDist = Infinity;
+  for (let i = 0; i < TILE_GRID.length; i++) {
+    const d = Math.abs((tileAngles[i] || 0) - targetAngle);
+    if (d < minDist) { minDist = d; nearestIdx = i; }
+  }
+  const newIdx = Math.max(0, Math.min(TILE_GRID.length - 1, nearestIdx + dir));
+  const targetGroupAngle = -(tileAngles[newIdx] || 0);
+  targetRotY = normalizeRotation(targetGroupAngle - tiles.grp.rotation.y);
+}
+
+function updateCameraPanel(v) {
+  const el=document.getElementById('s-camz');
+  const label=document.getElementById('v-camz');
+  if(el) el.value=String(v);
+  if(label) label.textContent=v.toFixed(1);
+}
+
+function setCameraTarget(v) {
+  targetCamZ = clamp(v, CAMERA_WORLD_MIN_Z, CAMERA_OVERVIEW_Z);
+  updateCameraPanel(targetCamZ);
+}
+
+function resetDiveScroll() {
+  diveScroll = 0;
+  magneticDive = false;
+}
+
+function resetExitScroll() {
+  exitScroll = 0;
+}
+
+function syncWorldFromRotation() {
+  if(level===3) return;
+  if(targetRotY > worldAngle * 0.35) {
+    if(activeWorld !== 'uxui') setWorld('uxui');
+  } else if(targetRotY < -worldAngle * 0.35) {
+    if(activeWorld !== 'foto') setWorld('foto');
+  } else if(activeWorld !== null) {
+    setWorld(null);
+  }
+}
+
+function startDiveFromScroll(deltaY) {
+  if(!activeWorld || level===3 || magneticDive) return;
+  targetRotY = activeWorld === 'uxui' ? worldAngle : -worldAngle;
+  diveScroll = clamp(diveScroll + deltaY, 0, DIVE_SCROLL_THRESHOLD);
+  const p = diveScroll / DIVE_SCROLL_THRESHOLD;
+  const eased = 1 - Math.pow(1 - p, 3);
+  setCameraTarget(CAMERA_OVERVIEW_Z + (CAMERA_PRE_DIVE_Z - CAMERA_OVERVIEW_Z) * eased);
+  if(diveScroll >= DIVE_SCROLL_THRESHOLD) {
+    magneticDive = true;
+    setCameraTarget(CAMERA_WORLD_Z);
+    setTimeout(() => {
+      goLevel3();
+      magneticDive = false;
+    }, 90);
+  }
+}
+
+function goLevel3() {
+  resetDiveScroll();
+  resetExitScroll();
+  document.body.classList.add('is-inside');
+  // Store initial rotation for returning to this world
+  worldInitialRotation[activeWorld] = targetRotY;
+  level=3; applyTileLayout(); setCameraTarget(CAMERA_WORLD_Z);
+  uxModelGrp.visible=false; fotoModelGrp.visible=false;
+  btnExpand.classList.remove('visible');
+  btnBack.classList.add('visible');
+  vignetteEl.classList.add('visible');
+  if(activeWorld==='uxui') { loadExtraTextures(uxuiTiles); resetInsideTileScales(uxuiTiles); }
+  else if(activeWorld==='foto') { loadExtraTextures(fotoTiles); resetInsideTileScales(fotoTiles); }
+  settleActiveTile(90);
+}
+
+function goLevel2() {
+  resetDiveScroll();
+  document.body.classList.remove('is-inside');
+  level=2; applyTileLayout(); setCameraTarget(CAMERA_OVERVIEW_Z);
+  // Restore initial rotation for this world
+  if(worldInitialRotation[activeWorld] !== null) {
+    targetRotY = worldInitialRotation[activeWorld];
+  }
+  uxModelGrp.visible=(activeWorld==='uxui');
+  fotoModelGrp.visible=(activeWorld==='foto');
+  btnBack.classList.remove('visible');
+  btnExpand.classList.add('visible');
+  vignetteEl.classList.remove('visible');
+  projectInfoEl.classList.remove('visible');
+}
+
+function goLevel1() {
+  resetDiveScroll();
+  document.body.classList.remove('is-inside');
+  level=1; applyTileLayout(); setCameraTarget(CAMERA_OVERVIEW_Z);
+  btnBack.classList.remove('visible');
+  setWorld(null); targetRotY=0;
+  projectInfoEl.classList.remove('visible');
+}
+
+btnExpand.addEventListener('click',goLevel3);
+btnBack.addEventListener('click',goLevel2);
+window.selectPixWorld = function(world) {
+  if (!world) return;
+  document.body.classList.remove('is-inside');
+  setWorld(world);
+  targetRotY = world === 'uxui' ? worldAngle : -worldAngle;
+  level = 2;
+  applyTileLayout();
+  setCameraTarget(CAMERA_OVERVIEW_Z);
+};
+document.querySelectorAll('[data-world]').forEach(btn => {
+  btn.addEventListener('click', () => window.selectPixWorld(btn.dataset.world));
+});
+
+// ── Globe drag ─────────────────────────────────────────────────────────────────
+let dragging=false,startX=0,startRotY=0,velocity=0,prevX=0;
+
+canvas.addEventListener('mousedown',e=>{
+  dragging=true; canvas.classList.add('dragging');
+  if(level===3) isInteractingTiles = true;
+  startX=e.clientX; startRotY=globe.rotation.y; velocity=0; prevX=e.clientX;
+});
+window.addEventListener('mousemove',e=>{
+  if(!dragging)return; velocity=e.clientX-prevX; prevX=e.clientX;
+  const s=(worldAngle*3)/innerWidth;
+  if(level===3){
+    targetRotY=startRotY-(e.clientX-startX)*s*1.35;
+  } else {
+    targetRotY=Math.max(-worldAngle*1.1,Math.min(worldAngle*1.1,startRotY+(e.clientX-startX)*s));
+    syncWorldFromRotation();
+  }
+});
+window.addEventListener('mouseup',e=>{
+  if(!dragging)return; dragging=false; canvas.classList.remove('dragging');
+  const dragDelta=Math.abs(e.clientX-startX);
+  if(level===3){
+    // Small click → try to center tile
+    if(dragDelta < 8) {
+      const tiles = activeWorld === 'uxui' ? uxuiTiles : fotoTiles;
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1);
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(tiles.items.map(it => it.imageMesh), false);
+      if(hits.length > 0) {
+        const hitMesh = hits[0].object;
+        const clickedIdx = tiles.items.findIndex(it => it.imageMesh === hitMesh);
+        if(clickedIdx >= 0) {
+          const groupAngle = tiles.grp.rotation.y + globe.rotation.y;
+          const currentAngle = -groupAngle;
+          const angle = wrapAngleNear(tileAngles[clickedIdx] || 0, currentAngle);
+          if (Math.abs(currentAngle - angle) < 0.05) { velocity = 0; return; }
+          const targetGroupAngle = -angle;
+          targetRotY = targetGroupAngle - tiles.grp.rotation.y;
+          velocity = 0;
+          return;
+        }
+      }
+    }
+    targetRotY -= velocity * 0.012;
+    settleActiveTile(120);
+    velocity = 0;
+  } else {
+    // Small click (not a drag) → enter the world
+    if(dragDelta < 8) {
+      if(level===2) { goLevel3(); return; }
+      if(level===1) {
+        // Determine world by click X: left half → UX, right half → Foto
+        const w = e.clientX < innerWidth/2 ? 'uxui' : 'foto';
+        setWorld(w); targetRotY=(w==='uxui')?worldAngle:-worldAngle; level=2;
+        setTimeout(goLevel3, 120);
+        return;
+      }
+    }
+    snap(e.clientX-startX);
+  }
+});
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault(); dragging=true;
+  if(level===3) isInteractingTiles = true;
+  startX=e.touches[0].clientX; startRotY=globe.rotation.y; velocity=0; prevX=startX;
+},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  const cx=e.touches[0].clientX; velocity=cx-prevX; prevX=cx;
+  const s=(worldAngle*3)/innerWidth;
+  if(level===3){
+    targetRotY=startRotY-(cx-startX)*s*1.35;
+  } else {
+    targetRotY=Math.max(-worldAngle*1.1,Math.min(worldAngle*1.1,startRotY+(cx-startX)*s));
+    syncWorldFromRotation();
+  }
+},{passive:false});
+canvas.addEventListener('touchend',()=>{
+  if(!dragging)return; dragging=false;
+  if(level===3){
+    targetRotY -= velocity * 0.012;
+    settleActiveTile(120);
+  } else snap(prevX-startX);
+});
+
+function snap(d) {
+  const s=(worldAngle*3)/innerWidth, delta=d*s, T=worldAngle*.15;
+  const fR=(velocity>4&&d>0), fL=(velocity<-4&&d<0);
+  let w=null;
+  if      (delta>T ||fR) w=(startRotY<-.05)?null:'uxui';
+  else if (delta<-T||fL) w=(startRotY>.05) ?null:'foto';
+  else { if(startRotY>.1)w='uxui'; else if(startRotY<-.1)w='foto'; }
+  setWorld(w);
+  if      (w==='uxui'){targetRotY= worldAngle; level=2;}
+  else if (w==='foto'){targetRotY=-worldAngle; level=2;}
+  else                {targetRotY=0;           level=1;}
+}
+
+window.addEventListener('resize',()=>{
+  renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 760 ? 1 : 1.25));
+  renderer.setSize(innerWidth,innerHeight);
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+});
+
+// ── Scroll wheel / trackpad navigation ────────────────────────────────────────
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const {dx, dy} = wheelDelta(e);
+  const absX = Math.abs(dx), absY = Math.abs(dy);
+  if(level===3){
+    if(absX > absY * 0.55) {
+      targetRotY -= dx * TRACKPAD_ROT_SPEED;
+      scheduleTileSettle(dx);
+      projectInfoOpacity = 0;
+      stickyTextState.textIdx = -1;
+      projectInfoFadeKey = '';
+      exitScroll = 0;
+    }
+    if(absY > 0) {
+      const nextZ = clamp(targetCamZ - dy * 0.006, CAMERA_WORLD_MIN_Z, CAMERA_WORLD_MAX_Z);
+      // Wenn am Max-Zoom und weiter rausgescrollt → Exit triggern
+      if(targetCamZ >= CAMERA_WORLD_MAX_Z - 0.001 && dy < 0) {
+        exitScroll = clamp(exitScroll + (-dy), 0, EXIT_SCROLL_THRESHOLD);
+        if(exitScroll >= EXIT_SCROLL_THRESHOLD) {
+          resetExitScroll();
+          goLevel2();
+          return;
+        }
+      } else {
+        exitScroll = Math.max(0, exitScroll - absY * 0.5);
+      }
+      targetCamZ = nextZ;
+      updateCameraPanel(targetCamZ);
+    }
+  } else {
+    if(absX > absY * 0.45) {
+      resetDiveScroll();
+      targetRotY=Math.max(-worldAngle*1.1,Math.min(worldAngle*1.1,targetRotY-dx*OVERVIEW_SCROLL_SPEED));
+      setCameraTarget(CAMERA_OVERVIEW_Z);
+      syncWorldFromRotation();
+    }
+    if(absY > absX * 0.85) {
+      if(!activeWorld) syncWorldFromRotation();
+      startDiveFromScroll(dy);
+    }
+  }
+},{passive:false});
+
+// ── Panel UI ───────────────────────────────────────────────────────────────────
+// Panel collapse / expand
+document.getElementById('panel-bar').addEventListener('click', () => {
+  const ctrl = document.getElementById('controls');
+  const icon = document.getElementById('panel-icon');
+  ctrl.classList.toggle('collapsed');
+  icon.textContent = ctrl.classList.contains('collapsed') ? '⊞' : '⊟';
+});
+
+// Section collapse / expand
+document.querySelectorAll('.sec-head').forEach(head => {
+  head.addEventListener('click', () => {
+    head.closest('.sec').classList.toggle('open');
+  });
+});
+
+// ── Control event listeners ────────────────────────────────────────────────────
+function get(id)      { return document.getElementById(id); }
+function set(id, val) { document.getElementById(id).textContent = val; }
+
+get('s-gscale').addEventListener('input',function(){
+  modelsGrp.scale.setScalar(parseFloat(this.value));
+  set('v-gscale', parseFloat(this.value).toFixed(2));
+});
+get('s-mscale').addEventListener('input',function(){
+  const v=parseFloat(this.value);
+  uxModelGrp.scale.setScalar(v); fotoModelGrp.scale.setScalar(v);
+  set('v-mscale', v.toFixed(2));
+});
+get('s-lblscale').addEventListener('input',function(){
+  const v=parseFloat(this.value);
+  lblUX.scale.setScalar(v); lblFoto.scale.setScalar(v);
+  pixMesh.scale.setScalar(v * PIX_TO_LABEL_HEIGHT);
+  set('v-lblscale', v.toFixed(2));
+});
+get('s-lblz').addEventListener('input',function(){
+  lblZ=parseFloat(this.value); placeLbls();
+  set('v-lblz', lblZ.toFixed(1));
+});
+get('sel-ux').addEventListener('change',function(){   loadModel(uxModelGrp,   this.value); });
+get('sel-foto').addEventListener('change',function(){  loadModel(fotoModelGrp, this.value); });
+get('s-wangle').addEventListener('input',function(){
+  const deg=parseFloat(this.value); setWorldAngle(deg*DEG);
+  set('v-wangle', deg+'°');
+});
+get('sel-shell').addEventListener('change',function(){ setShellPattern(this.value); });
+get('s-shopacity').addEventListener('input',function(){
+  shellTargetOpacity=parseFloat(this.value); setShellOpacity(shellTargetOpacity);
+  set('v-shopacity', shellTargetOpacity.toFixed(3));
+});
+
+get('s-tscale').addEventListener('input',function(){
+  tileScale=parseFloat(this.value);
+  if(level !== 3) applyTileLayout();
+  set('v-tscale', tileScale.toFixed(2));
+});
+get('s-inscale').addEventListener('input',function(){
+  insideTileScale=parseFloat(this.value);
+  if(level === 3) applyTileLayout();
+  set('v-inscale', insideTileScale.toFixed(2));
+});
+get('s-tgap').addEventListener('input',function(){
+  tileWorldGap=parseFloat(this.value);
+  if(level !== 3) applyTileLayout();
+  set('v-tgap', tileWorldGap.toFixed(2));
+});
+get('s-ingap').addEventListener('input',function(){
+  insideTileGap=parseFloat(this.value);
+  if(level === 3) applyTileLayout();
+  set('v-ingap', insideTileGap.toFixed(2));
+});
+get('s-infoy').addEventListener('input',function(){
+  projectInfoY=parseFloat(this.value) / 100;
+  set('v-infoy', `${this.value}%`);
+});
+get('s-camz').addEventListener('input',function(){
+  const v=parseFloat(this.value); targetCamZ=v; camera.position.z=v;
+  set('v-camz', v.toFixed(1));
+});
+get('s-fov').addEventListener('input',function(){
+  const v=parseFloat(this.value); camera.fov=v; camera.updateProjectionMatrix();
+  set('v-fov', v+'°');
+});
+
+// ── Render loop ────────────────────────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),.05);
+
+  globe.rotation.y    = damp(globe.rotation.y, targetRotY, 8, dt);
+  camera.position.z   = damp(camera.position.z, targetCamZ, 6, dt);
+  camera.position.y   = damp(camera.position.y, 0, 5, dt);
+  camera.lookAt(0,0,0);
+
+  // Outer sphere: subtle depth when world active, invisible in neutral (no logo overlay)
+  const outerTarget = (activeWorld!==null) ? 0.3 : 0;
+  outerMat.opacity  = damp(outerMat.opacity, outerTarget, 8, dt);
+  const shellStateTarget = activeWorld === null ? shellTargetOpacity : 0;
+  shellMaterials.forEach(mat => {
+    mat.opacity = damp(mat.opacity, shellStateTarget, 8, dt);
+  });
+
+  const isUX=activeWorld==='uxui', isFoto=activeWorld==='foto';
+  const inL3 = level===3;
+  updateTileFocus(dt);
+  updateProjectInfo(dt);
+  // L2: only the overview strip is visible. Captions appear after diving into a world.
+  uxuiTiles.items.forEach((item,i)=>{
+    const {extra,strip}=TILE_GRID[i];
+    const imageTgt = isUX ? (inL3 ? (extra?1:1) : (strip?1:0)) : 0;
+    updateItemSlides(item, imageTgt, dt, inL3 && isUX);
+  });
+  fotoTiles.items.forEach((item,i)=>{
+    const {extra,strip}=TILE_GRID[i];
+    const imageTgt = isFoto ? (inL3 ? (extra?1:1) : (strip?1:0)) : 0;
+    updateItemSlides(item, imageTgt, dt, inL3 && isFoto);
+  });
+
+  // PIX logo: full opacity when neutral, hide when world active
+  const pixTarget = inL3 ? 0 : 0.9;
+  pixMat.opacity=damp(pixMat.opacity, pixTarget, 8, dt);
+
+  // Keep overview labels intact; hide only once we are inside a world.
+  lblUXMat.opacity  =damp(lblUXMat.opacity,   inL3 ? 0 : (isUX ? 1.0 : 0.35), 8, dt);
+  lblFotoMat.opacity=damp(lblFotoMat.opacity, inL3 ? 0 : (isFoto ? 1.0 : 0.35), 8, dt);
+
+  renderer.render(scene,camera);
+}
+animate();
+
+// ── Force default slider values on every load (overrides browser form cache) ──
+function applyDefaults(){
+  const DEFAULTS = {
+    's-gscale':   '0.95',
+    's-mscale':   '3.25',
+    's-lblscale': '0.30',
+    's-lblz':     '-0.5',
+    's-wangle':   '13',
+    's-shopacity':'0.265',
+    's-tscale':   '3',
+    's-inscale':  '8',
+    's-tgap':     '0.48',
+    's-ingap':    '0.48',
+    's-infoy':    '76',
+    's-camz':     '5.7',
+    's-fov':      '48',
+  };
+  Object.entries(DEFAULTS).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(el){ el.value=val; el.dispatchEvent(new Event('input')); }
+  });
+  const shellSel=document.getElementById('sel-shell');
+  if(shellSel){ shellSel.value='latitude'; shellSel.dispatchEvent(new Event('change')); }
+}
+applyDefaults();
+// Run again after load to beat browser autocomplete restoring cached values
+window.addEventListener('load', applyDefaults);
+</script>
+</body>
+</html>

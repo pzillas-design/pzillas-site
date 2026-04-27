@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PIX Admin · v30 Slots</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#050505;color:#f2f2f2;font:14px/1.45 "Helvetica Neue",Arial,sans-serif}
+button,input,textarea,select{font:inherit}
+.shell{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+aside{border-right:1px solid rgba(255,255,255,.1);padding:24px;position:sticky;top:0;height:100vh;background:#080808}
+h1{font-size:16px;letter-spacing:.22em;text-transform:uppercase;margin:0 0 12px}
+.hint{color:rgba(255,255,255,.5);margin:0 0 24px}
+.actions{display:flex;flex-direction:column;gap:10px}
+button,.link{border:1px solid rgba(255,255,255,.16);border-radius:999px;background:#111;color:#fff;padding:10px 14px;text-decoration:none;cursor:pointer;text-align:center}
+button:hover,.link:hover{background:#fff;color:#000}
+.primary{background:#fff;color:#000;border-color:#fff}
+main{padding:24px;display:flex;flex-direction:column;gap:18px}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;position:sticky;top:0;background:linear-gradient(#050505 70%,rgba(5,5,5,0));z-index:5;padding-bottom:18px}
+.tabs{display:flex;gap:8px}
+.tab{opacity:.55}
+.tab.active{opacity:1;background:#fff;color:#000}
+.slot{display:grid;grid-template-columns:70px minmax(220px,1.1fr) minmax(260px,1fr);gap:14px;padding:16px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(255,255,255,.035)}
+.slot-num{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.preview{aspect-ratio:3/2;border-radius:12px;background:#111 center/cover no-repeat;border:1px solid rgba(255,255,255,.08)}
+label{display:flex;flex-direction:column;gap:5px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+input,textarea,select{width:100%;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:#0b0b0b;color:#fff;padding:9px 10px;outline:none}
+textarea{min-height:78px;resize:vertical;text-transform:none;letter-spacing:0;font-size:13px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.slide-list{display:flex;flex-direction:column;gap:8px}
+.slide-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.ghost{opacity:.55}
+.check{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px;color:rgba(255,255,255,.7)}
+.check input{width:auto}
+.status{min-height:20px;color:rgba(255,255,255,.5)}
+@media(max-width:900px){.shell{grid-template-columns:1fr}aside{position:relative;height:auto}.slot{grid-template-columns:1fr}.toolbar{position:relative}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <h1>PIX Admin</h1>
+    <p class="hint">Kleines lokales CMS für v30. Änderungen werden im Browser gespeichert und von der 3D-Seite gelesen.</p>
+    <div class="actions">
+      <button class="primary" id="save">Speichern</button>
+      <a class="link" href="./prototype-v30.html">V30 öffnen</a>
+      <a class="link" href="./content-viewer.html">JSON ansehen</a>
+      <button id="export">JSON exportieren</button>
+      <button id="reset">Zurücksetzen</button>
+    </div>
+    <p class="hint" style="margin-top:22px">Tipp: Sobald ein Slot mehr als ein Bild hat, wechselt er automatisch weich durch.</p>
+    <div class="status" id="status"></div>
+  </aside>
+  <main>
+    <div class="toolbar">
+      <div class="tabs">
+        <button class="tab active" data-world="foto">Foto</button>
+        <button class="tab" data-world="uxui">UX</button>
+      </div>
+      <div class="hint">Slots bestimmen Reihenfolge und Position im Kreis.</div>
+    </div>
+    <div id="slots"></div>
+  </main>
+</div>
+
+<script>
+const STORAGE_KEY = 'pix.v30.content';
+const LEGACY_STORAGE_KEY = 'pix.v29.content';
+const ASSETS = [
+  'assets/uxui/asset 2.webp','assets/uxui/asset 3.webp','assets/uxui/asset 4.webp','assets/uxui/asset 5.webp','assets/uxui/asset 6.webp','assets/uxui/asset 7.webp',
+  'assets/immo fotos/asset 1.webp','assets/immo fotos/asset 2.webp','assets/immo fotos/asset 3.webp','assets/immo fotos/asset 4.webp','assets/immo fotos/asset 5.webp','assets/immo fotos/asset 6.webp','assets/immo fotos/asset 19.webp',
+  'assets/offenblende/-Portfolio-Drohnenfotografie-0003.jpeg','assets/offenblende/-Portfolio-Drohnenfotografie-0007.jpeg','assets/offenblende/-Portfolio-Konferenz-0001.jpg','assets/offenblende/-Portfolio-Konferenz-0003.jpeg','assets/offenblende/-Portfolio-Produktfotografie-0001.jpg',
+  'assets/busiens und events fotos/ 1.webp','assets/busiens und events fotos/ 2.webp','assets/busiens und events fotos/ 3.webp','assets/busiens und events fotos/asset 1.webp','assets/busiens und events fotos/asset 4.webp'
+];
+const COLS = [-5.5,-4.5,-3.5,-2.5,-1,0,1,2.3,3.3,5,6,7];
+const defaults = {
+  version: 1,
+  worlds: {
+    foto: { slots: [
+      slot('Event Reportage','Opening Night','Dokumentarische Bilder mit Fokus auf Licht, Begegnungen und die kleinen Gesten zwischen den Programmpunkten.','assets/busiens und events fotos/ 1.webp',-5.5,false),
+      slot('Event Reportage','Audience Moments','Eine Serie aus echten Reaktionen und nahen Beobachtungen.','assets/busiens und events fotos/ 3.webp',-4.5,false),
+      slot('Konferenz','Stage & Talk','Klare Blickachsen, Speaker-Momente und Raumgefühl für die Kommunikation nach dem Event.','assets/offenblende/-Portfolio-Konferenz-0001.jpg',-3.5,false),
+      slot('Konferenz','Behind the Room','Visuelle Notizen aus Publikum, Bühne und Umgebung.','assets/offenblende/-Portfolio-Konferenz-0003.jpeg',-2.5,false),
+      slot('Immobilien','Terrasse & Außenraum','Licht, Material und Umgebung werden als Raumgefühl lesbar.','assets/immo fotos/asset 1.webp',-1,true),
+      slot('Immobilien','Drohnenperspektive','Die Lage und Außenwirkung werden ruhig eingeordnet.','assets/immo fotos/asset 3.webp',0,true,['assets/offenblende/-Portfolio-Drohnenfotografie-0003.jpeg','assets/immo fotos/asset 1.webp'],true),
+      slot('Immobilien','Quartier von oben','Eine klare Orientierung für Exposés, Website und Vermarktung.','assets/offenblende/-Portfolio-Drohnenfotografie-0003.jpeg',1,true),
+      slot('Immobilien','Interior Details','Oberflächen, Linien und Tageslicht zeigen die Qualität des Objekts.','assets/immo fotos/asset 5.webp',2.3,false),
+      slot('Immobilien','Living Space','Helle, ruhige Bildsprache für einladende Räume.','assets/immo fotos/asset 6.webp',3.3,false),
+      slot('Business','Team Portrait','Professionelle Nähe für Menschen, Prozesse und Markenauftritt.','assets/busiens und events fotos/asset 1.webp',5,false),
+      slot('Business','Brand Story','Portraits, Produktnähe und Arbeitssituationen mit klarer Bildsprache.','assets/busiens und events fotos/asset 4.webp',6,false),
+      slot('Produkt','Product Focus','Reduzierte Produktfotografie für Form, Material und Nutzen.','assets/offenblende/-Portfolio-Produktfotografie-0001.jpg',7,false)
+    ]},
+    uxui: { slots: [
+      slot('Web-App','Tozasto','Plattform für nachhaltige Immobilienprojekte mit klarer Struktur.','assets/uxui/asset 2.webp',-5.5,false),
+      slot('SaaS Interface','Leasehub','Digitale Ordnung für Vermietung, Objekte und Übergaben.','assets/uxui/asset 3.webp',-4.5,false),
+      slot('Culture App','Staatstheater','Ruhiger Zugang zu einem vielschichtigen Erlebnis im Stadtraum.','assets/uxui/asset 4.webp',-3.5,false),
+      slot('Operations Tool','Jakob Admin','Touren, Ressourcen und Kontakte in einem klaren Arbeitsfluss.','assets/uxui/asset 5.webp',-2.5,false),
+      slot('Operations Tool','Jakob Admin','Planung, Status und Detailinformationen ohne Kontextwechsel.','assets/uxui/asset 6.webp',-1,true),
+      slot('Healthcare Website','Psilox','Wissenschaftliche Produkt- und Unternehmensseite mit präziser Sprache.','assets/uxui/asset 7.webp',0,true,['assets/uxui/asset 6.webp','assets/uxui/asset 2.webp'],true),
+      slot('Web-App','Tozasto','Projektseiten und Immobilienlogik als fokussierte Nutzerreise.','assets/uxui/asset 2.webp',1,true),
+      slot('Dashboard','Resource View','Reduzierter Überblick für operative Entscheidungen.','assets/uxui/asset 3.webp',2.3,false),
+      slot('SaaS Interface','Leasehub','Fortschritt und nächste Schritte sichtbar machen.','assets/uxui/asset 4.webp',3.3,false),
+      slot('Culture App','Staatstheater','Orientierung, Erzählung und Interaktion im Stadtraum.','assets/uxui/asset 5.webp',5,false),
+      slot('Healthcare Website','Psilox','Komplexe Technologie in klare Informationsarchitektur übersetzen.','assets/uxui/asset 6.webp',6,false),
+      slot('Product Design','Interface System','Wiederverwendbare Module und ruhige Hierarchien.','assets/uxui/asset 7.webp',7,false)
+    ]}
+  }
+};
+function slot(category,title,body,cover,col,strip,extraSlides=[]) {
+  return {category,title,body,button:'',href:'',col,row:0,strip,slides:[cover,...extraSlides]};
+}
+let state = load();
+let activeWorld = 'foto';
+function load(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)) || structuredClone(defaults)}catch{return structuredClone(defaults)}}
+function save(){localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); flash('Gespeichert. V30 neu laden.')}
+function flash(msg){document.getElementById('status').textContent=msg;setTimeout(()=>document.getElementById('status').textContent='',2600)}
+function assetUrl(path){return `../${path}`.replaceAll(' ', '%20')}
+function render(){
+  document.querySelectorAll('.tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.world===activeWorld));
+  const root=document.getElementById('slots');
+  root.innerHTML='';
+  state.worlds[activeWorld].slots.forEach((s,i)=>root.appendChild(renderSlot(s,i)));
+}
+function renderSlot(s,i){
+  const el=document.createElement('section');
+  el.className='slot';
+  el.innerHTML=`
+    <div><div class="slot-num">Slot ${i+1}</div><div class="preview"></div></div>
+    <div>
+      <div class="row">
+        <label>Kategorie<input data-k="category" value="${esc(s.category)}"></label>
+        <label>Titel<input data-k="title" value="${esc(s.title)}"></label>
+      </div>
+      <label>Beschreibung<textarea data-k="body">${esc(s.body)}</textarea></label>
+      <div class="row">
+        <label>Button<input data-k="button" value="${esc(s.button||'')}"></label>
+        <label>Link<input data-k="href" value="${esc(s.href||'')}"></label>
+      </div>
+    </div>
+    <div>
+      <div class="mini">
+        <label>Kreis-Pos.<input data-k="col" type="number" step="0.1" value="${s.col}"></label>
+        <label>Y-Reihe<input data-k="row" type="number" step="0.1" value="${s.row||0}"></label>
+        <label class="check"><input data-k="strip" type="checkbox" ${s.strip?'checked':''}> Übersicht</label>
+      </div>
+      <p class="hint" style="margin:8px 0 0">Mehrere Bilder in diesem Slot wechseln automatisch.</p>
+      <div class="slide-list"></div>
+      <button class="ghost add-slide">Bild hinzufügen</button>
+    </div>`;
+  const preview=el.querySelector('.preview');
+  preview.style.backgroundImage=`url("${assetUrl(s.slides[0]||'')}")`;
+  el.querySelectorAll('[data-k]').forEach(input=>input.addEventListener('input',()=>updateField(s,input,preview)));
+  renderSlides(el.querySelector('.slide-list'),s,preview);
+  el.querySelector('.add-slide').addEventListener('click',()=>{s.slides.push(ASSETS[0]);render();});
+  return el;
+}
+function renderSlides(root,s,preview){
+  root.innerHTML='';
+  s.slides.forEach((src,idx)=>{
+    const row=document.createElement('div');
+    row.className='slide-row';
+    row.innerHTML=`<select>${ASSETS.map(a=>`<option ${a===src?'selected':''}>${esc(a)}</option>`).join('')}</select><button>×</button>`;
+    row.querySelector('select').addEventListener('change',e=>{s.slides[idx]=e.target.value;if(idx===0)preview.style.backgroundImage=`url("${assetUrl(e.target.value)}")`;});
+    row.querySelector('button').addEventListener('click',()=>{s.slides.splice(idx,1);render();});
+    root.appendChild(row);
+  });
+}
+function updateField(s,input,preview){
+  const k=input.dataset.k;
+  if(input.type==='checkbox')s[k]=input.checked;
+  else if(input.type==='number')s[k]=Number(input.value);
+  else s[k]=input.value;
+}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{activeWorld=btn.dataset.world;render();}));
+document.getElementById('save').addEventListener('click',save);
+document.getElementById('reset').addEventListener('click',()=>{state=structuredClone(defaults);save();render();});
+document.getElementById('export').addEventListener('click',()=>navigator.clipboard?.writeText(JSON.stringify(state,null,2)).then(()=>flash('JSON kopiert.')));
+render();
+</script>
+</body>
+</html>
