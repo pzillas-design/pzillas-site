@@ -42,41 +42,21 @@ body.is-inside #site-chrome{opacity:0;filter:blur(6px);transform:translateY(-8px
 }
 .nav-pill:hover{background:#fff;color:#020202;border-color:#fff;transform:translateY(-1px)}
 .nav-pill--primary{background:rgba(255,255,255,.9);color:#020202;border-color:rgba(255,255,255,.9)}
-#landing-prompt{
-  position:fixed;left:50%;top:52%;z-index:45;transform:translate(-50%,-50%);
-  width:min(980px,86vw);text-align:center;pointer-events:none;
-  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#fff;
-  transition:opacity .38s ease,filter .38s ease,transform .38s ease;
-}
-body.has-world #landing-prompt,
-body.is-inside #landing-prompt{opacity:0;filter:blur(8px);transform:translate(-50%,-48%) scale(.98)}
-.landing-title{
-  font-size:clamp(76px,17vw,260px);font-weight:760;letter-spacing:-.08em;line-height:.78;
-  color:rgba(255,255,255,.9);text-shadow:0 0 70px rgba(255,255,255,.08);
-}
-.landing-sub{
-  margin:24px auto 0;max-width:520px;font-size:clamp(13px,1.4vw,17px);line-height:1.5;
-  color:rgba(255,255,255,.5);
-}
 @media (max-width:720px){
   #site-chrome{left:16px;right:16px;top:16px;flex-direction:column;gap:14px}
   .brand-copy{max-width:280px}
   .site-nav{flex-wrap:wrap}
-  #landing-prompt{top:58%}
 }
 
 #project-info{
   position:fixed;left:50%;top:76vh;z-index:56;
-  width:min(540px,72vw);transform:translateX(-50%) translateY(10px);
+  width:min(540px,72vw);transform:translateX(calc(-50% + var(--project-shift, 0px)));
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
   color:#fff;pointer-events:none;opacity:0;filter:blur(3px);
-  transition:opacity .28s ease,filter .28s ease,transform .28s ease;
+  transition:opacity .28s ease,filter .28s ease,transform .34s cubic-bezier(.2,.9,.25,1);
 }
-#project-info.visible{opacity:1;filter:blur(0);transform:translateX(-50%) translateY(0)}
-.project-kicker{
-  margin-bottom:8px;font-size:10px;font-weight:650;letter-spacing:.18em;text-transform:uppercase;
-  color:rgba(255,255,255,.44);
-}
+#project-info.visible{opacity:1;filter:blur(0);transform:translateX(-50%)}
+.project-kicker{display:none}
 .project-title{
   margin-bottom:8px;font-size:clamp(22px,2.8vw,34px);font-weight:520;letter-spacing:-.035em;line-height:.98;
   color:rgba(255,255,255,.92);
@@ -94,9 +74,10 @@ body.is-inside #landing-prompt{opacity:0;filter:blur(8px);transform:translate(-5
 }
 .project-bars span.active{width:30px;background:rgba(255,255,255,.76)}
 .project-link{
-  display:inline-block;margin-top:14px;font-size:11px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-size:11px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;
   color:rgba(255,255,255,.78);text-decoration:none;pointer-events:auto;
 }
+.project-link::after{content:"›";font-size:18px;line-height:.7;transform:translateY(-1px)}
 
 .globe-btn{
   position:fixed;left:50%;bottom:14vh;transform:translateX(-50%);z-index:50;
@@ -112,7 +93,7 @@ body.is-inside #landing-prompt{opacity:0;filter:blur(8px);transform:translate(-5
 @keyframes btnIn{from{opacity:0;transform:translateX(-50%) translateY(14px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 #btn-back{
   left:50%;top:auto;bottom:7.5vh;transform:translateX(-50%);
-  padding:12px 20px;font-size:11px;letter-spacing:.18em;
+  padding:15px 26px;font-size:12px;letter-spacing:.2em;
   color:rgba(255,255,255,.82);background:rgba(0,0,0,.28);
   border-color:rgba(255,255,255,.22);box-shadow:none;backdrop-filter:blur(18px);
 }
@@ -278,11 +259,6 @@ select:hover{border-color:rgba(255,255,255,.18)}
   </nav>
 </header>
 
-<section id="landing-prompt" aria-hidden="true">
-  <div class="landing-title">PIX</div>
-  <p class="landing-sub">Wähle eine Welt: UX für digitale Produkte oder Foto für visuelle Serien. Vertikal tauchst du ein, horizontal wanderst du weiter.</p>
-</section>
-
 <script>
 // Lightweight fallback so the page chrome remains interactive even if WebGL/module loading fails.
 window.selectPixWorld = function(world) {
@@ -420,8 +396,8 @@ window.selectPixWorld = function(world) {
           <input autocomplete="off" type="range" id="s-tgap" min="0.05" max="2.5" step="0.05" value="0.48">
         </div>
         <div>
-          <div class="cr"><span>Innen Größe</span><span class="cr-val" id="v-inscale">8.00</span></div>
-          <input autocomplete="off" type="range" id="s-inscale" min="0.5" max="24" step="0.05" value="8">
+          <div class="cr"><span>Innen Größe</span><span class="cr-val" id="v-inscale">11.50</span></div>
+          <input autocomplete="off" type="range" id="s-inscale" min="0.5" max="24" step="0.05" value="11.5">
         </div>
         <div>
           <div class="cr"><span>Innen Abstand</span><span class="cr-val" id="v-ingap">0.48</span></div>
@@ -555,13 +531,13 @@ const FOTO_CAPTIONS = {
   1: {category:'Event Reportage', title:'Audience Moments', body:'Eine Serie aus echten Reaktionen und nahen Beobachtungen, ohne die Atmosphäre des Abends zu überinszenieren.'},
   2: {category:'Konferenz', title:'Stage & Talk', body:'Klare Blickachsen, Speaker-Momente und Raumgefühl für die Kommunikation nach dem Event.'},
   3: {category:'Konferenz', title:'Behind the Room', body:'Visuelle Notizen aus Publikum, Bühne und Umgebung, die den Charakter der Veranstaltung weitertragen.'},
-  4: {category:'Immobilien', title:'Terrasse & Außenraum', body:'Licht, Material und Umgebung werden als ein zusammenhängendes Raumgefühl lesbar.'},
-  5: {category:'Immobilien', title:'Drohnenperspektive', body:'Die Lage und Außenwirkung werden ruhig eingeordnet, bevor Details und Innenräume übernehmen.'},
-  6: {category:'Immobilien', title:'Quartier von oben', body:'Eine klare räumliche Orientierung für Exposés, Website und digitale Vermarktung.'},
-  7: {category:'Immobilien', title:'Interior Details', body:'Oberflächen, Linien und Tageslicht zeigen die Qualität des Objekts ohne künstliche Inszenierung.'},
+  4: {category:'Event', title:'Events', body:'Atmosphäre, Menschen und markante Momente werden dokumentarisch eingefangen, damit Veranstaltungen auch nach dem Termin spürbar bleiben.'},
+  5: {category:'Drohne', title:'Drohnenfotografie', body:'Lage, Umgebung und räumliche Wirkung werden aus der Luft ruhig und klar eingeordnet.'},
+  6: {category:'Immobilien', title:'Immobilien', body:'Außenräume, Innenräume und Details entstehen als klare Bildstrecke für Exposé, Website und digitale Vermarktung.'},
+  7: {category:'Business', title:'Business', body:'Professionelle Nähe für Menschen, Prozesse und Markenauftritt im Unternehmenskontext.'},
   8: {category:'Immobilien', title:'Living Space', body:'Helle, ruhige Bildsprache für Räume, die sofort verständlich und einladend wirken.'},
-  9: {category:'Business', title:'Team Portrait', body:'Professionelle Nähe für Menschen, Prozesse und Markenauftritt im Unternehmenskontext.'},
-  10:{category:'Business', title:'Brand Story', body:'Portraits, Produktnähe und Arbeitssituationen mit einer klaren, unaufgeregten Bildsprache.', button:'Serie ansehen'},
+  9: {category:'Business', title:'Team Portrait', body:'Portraits und Arbeitssituationen mit einer klaren, unaufgeregten Bildsprache.'},
+  10:{category:'Business', title:'Brand Story', body:'Teams, Produkte und Prozesse werden zu einer visuellen Markenerzählung verbunden.'},
   11:{category:'Produkt', title:'Product Focus', body:'Reduzierte Produktfotografie, die Form, Material und Nutzen in den Vordergrund stellt.'},
 };
 
@@ -657,7 +633,16 @@ if (contentOverride?.worlds) {
   applyWorldOverride(contentOverride.worlds.uxui, UXUI_IMGS, UXUI_SLIDES, UXUI_CAPTIONS);
 }
 
-let ringBaseRadius = 10.8, tileRadius = 10.8, phiStep = 36, schraegeY = 0, curvature = 1.0, tileScale = 1.0, insideTileScale = 8.0, safeTileScale = 1.0;
+Object.values(FOTO_CAPTIONS).forEach(cfg => {
+  cfg.button = cfg.button || 'Webseite öffnen';
+  delete cfg.category;
+});
+Object.values(UXUI_CAPTIONS).forEach(cfg => {
+  cfg.button = cfg.button || 'Webseite öffnen';
+  delete cfg.category;
+});
+
+let ringBaseRadius = 10.8, tileRadius = 10.8, phiStep = 36, schraegeY = 0, curvature = 1.0, tileScale = 1.0, insideTileScale = 11.5, safeTileScale = 1.0;
 const TILE_FOCUS_SCALE = 1.18;
 let tileWorldGap = 0.48, insideTileGap = 0.48;
 const TILE_RING_FIT_RATIO = 0.92;
@@ -1346,17 +1331,19 @@ const projectLinkEl = document.getElementById('project-link');
 let currentProjectInfoKey = '';
 let projectInfoFadeKey = '';
 let projectInfoOpacity = 0;
+let projectInfoDirection = 1;
 let currentProjectBarsKey = '';
 
 function setProjectInfo(cfg, key) {
   if (currentProjectInfoKey === key) return;
   currentProjectInfoKey = key;
-  projectKickerEl.textContent = cfg.category || 'Projekt';
+  projectInfoEl.style.setProperty('--project-shift', `${projectInfoDirection * 42}px`);
+  projectKickerEl.textContent = '';
   projectTitleEl.textContent = cfg.title || '';
   projectBodyEl.textContent = cfg.body || '';
-  projectLinkEl.textContent = cfg.button ? `${cfg.button} ->` : 'Projekt anfragen ->';
+  projectLinkEl.textContent = cfg.button || 'Webseite öffnen';
   projectLinkEl.href = cfg.href || CONTACT_HREF;
-  projectLinkEl.style.display = 'inline-block';
+  projectLinkEl.style.display = 'inline-flex';
 }
 
 function setProjectBars(count, activeIdx) {
@@ -1414,6 +1401,7 @@ function updateProjectInfo(dt) {
   projectInfoEl.style.top = `${clamp(innerHeight * projectInfoY, innerHeight * 0.56, innerHeight - 150).toFixed(1)}px`;
   projectInfoEl.style.width = `${Math.min(540, innerWidth * 0.72).toFixed(1)}px`;
   projectInfoEl.style.opacity = projectInfoOpacity.toFixed(3);
+  projectInfoEl.style.setProperty('--project-shift', nextOpacity > 0.5 ? '0px' : `${projectInfoDirection * -36}px`);
   projectInfoEl.classList.toggle('visible', projectInfoOpacity > 0.03);
 }
 
@@ -1497,8 +1485,8 @@ const L3_PAN_UNLIMITED = true; // Endless scroll/rotation
 let stickyTextState = { tileIdx: -1, focus: 0, lockedIdx: -1, textIdx: -1 }; // For sticky text tracking
 const CAMERA_OVERVIEW_Z = 5.7;
 const CAMERA_PRE_DIVE_Z = 5.18;
-const CAMERA_WORLD_Z = 1.72;
-const CAMERA_WORLD_MIN_Z = 1.72;
+const CAMERA_WORLD_Z = 1.38;
+const CAMERA_WORLD_MIN_Z = 1.38;
 const CAMERA_WORLD_MAX_Z = 5.35;
 const DIVE_SCROLL_THRESHOLD = 165;
 const EXIT_SCROLL_THRESHOLD = 140;
@@ -1552,6 +1540,7 @@ function wheelDelta(e) {
 }
 
 function scheduleTileSettle(dx) {
+  if (dx) projectInfoDirection = dx > 0 ? 1 : -1;
   clearTimeout(tileSettleTimer);
   isInteractingTiles = true;
   tileSettleTimer = setTimeout(() => {
@@ -1622,6 +1611,7 @@ function snapToNearestTile(tiles, flick = 0) {
 }
 
 function snapToNearestLoopTile(tiles, flick = 0) {
+  if (flick) projectInfoDirection = flick > 0 ? 1 : -1;
   const groupAngleTarget = tiles.grp.rotation.y + targetRotY;
   const currentAngle = -groupAngleTarget;
   let nearestAngle = tileAngles[0] || 0, nearestIdx = 0, minDist = Infinity;
@@ -1637,6 +1627,7 @@ function snapToNearestLoopTile(tiles, flick = 0) {
 }
 
 function advanceTile(tiles, dir) {
+  if (dir) projectInfoDirection = dir > 0 ? 1 : -1;
   // Move targetRotY exactly one TILE_GRID slot in the given direction (+1 or -1).
   // Use targetRotY (not damped globe.rotation.y) so rapid bursts accumulate.
   const groupAngleTarget = tiles.grp.rotation.y + targetRotY;
@@ -1768,6 +1759,7 @@ window.addEventListener('mousemove',e=>{
   if(!dragging)return; velocity=e.clientX-prevX; prevX=e.clientX;
   const s=(worldAngle*3)/innerWidth;
   if(level===3){
+    projectInfoDirection = velocity > 0 ? -1 : 1;
     targetRotY=startRotY-(e.clientX-startX)*s*1.35;
   } else {
     targetRotY=Math.max(-worldAngle*1.1,Math.min(worldAngle*1.1,startRotY+(e.clientX-startX)*s));
@@ -1828,6 +1820,7 @@ canvas.addEventListener('touchmove',e=>{
   const cx=e.touches[0].clientX; velocity=cx-prevX; prevX=cx;
   const s=(worldAngle*3)/innerWidth;
   if(level===3){
+    projectInfoDirection = velocity > 0 ? -1 : 1;
     targetRotY=startRotY-(cx-startX)*s*1.35;
   } else {
     targetRotY=Math.max(-worldAngle*1.1,Math.min(worldAngle*1.1,startRotY+(cx-startX)*s));
@@ -1869,6 +1862,7 @@ canvas.addEventListener('wheel', e => {
   const absX = Math.abs(dx), absY = Math.abs(dy);
   if(level===3){
     if(absX > absY * 0.55) {
+      projectInfoDirection = dx > 0 ? 1 : -1;
       targetRotY -= dx * TRACKPAD_ROT_SPEED;
       scheduleTileSettle(dx);
       projectInfoOpacity = 0;
@@ -2046,7 +2040,7 @@ function applyDefaults(){
     's-wangle':   '13',
     's-shopacity':'0.265',
     's-tscale':   '3',
-    's-inscale':  '8',
+    's-inscale':  '11.5',
     's-tgap':     '0.48',
     's-ingap':    '0.48',
     's-infoy':    '76',

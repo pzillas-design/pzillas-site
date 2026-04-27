@@ -6,7 +6,6 @@
       "label": "Foto",
       "slots": [
         {
-          "category": "Event Reportage",
           "title": "Opening Night",
           "body": "Dokumentarische Bilder mit Fokus auf Licht, Begegnungen und die kleinen Gesten zwischen den Programmpunkten.",
           "button": "",
@@ -14,10 +13,11 @@
           "col": -5.5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/busiens und events fotos/ 1.webp"]
+          "slides": [
+            "assets/busiens und events fotos/ 1.webp"
+          ]
         },
         {
-          "category": "Event Reportage",
           "title": "Audience Moments",
           "body": "Eine Serie aus echten Reaktionen und nahen Beobachtungen.",
           "button": "",
@@ -25,10 +25,11 @@
           "col": -4.5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/busiens und events fotos/ 3.webp"]
+          "slides": [
+            "assets/busiens und events fotos/ 3.webp"
+          ]
         },
         {
-          "category": "Konferenz",
           "title": "Stage & Talk",
           "body": "Klare Blickachsen, Speaker-Momente und Raumgefühl für die Kommunikation nach dem Event.",
           "button": "",
@@ -36,10 +37,11 @@
           "col": -3.5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/offenblende/-Portfolio-Konferenz-0001.jpg"]
+          "slides": [
+            "assets/offenblende/-Portfolio-Konferenz-0001.jpg"
+          ]
         },
         {
-          "category": "Konferenz",
           "title": "Behind the Room",
           "body": "Visuelle Notizen aus Publikum, Bühne und Umgebung.",
           "button": "",
@@ -47,23 +49,25 @@
           "col": -2.5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/offenblende/-Portfolio-Konferenz-0003.jpeg"]
+          "slides": [
+            "assets/offenblende/-Portfolio-Konferenz-0003.jpeg"
+          ]
         },
         {
-          "category": "Immobilien",
-          "title": "Terrasse & Außenraum",
-          "body": "Licht, Material und Umgebung werden als Raumgefühl lesbar.",
+          "title": "Events",
+          "body": "Atmosphäre, Menschen und markante Momente werden dokumentarisch eingefangen, damit Veranstaltungen auch nach dem Termin spürbar bleiben.",
           "button": "",
           "href": "",
           "col": -1,
           "row": 0,
           "strip": true,
-          "slides": ["assets/immo fotos/asset 1.webp"]
+          "slides": [
+            "assets/immo fotos/asset 1.webp"
+          ]
         },
         {
-          "category": "Immobilien",
-          "title": "Drohnenperspektive",
-          "body": "Die Lage und Außenwirkung werden ruhig eingeordnet.",
+          "title": "Drohnenfotografie",
+          "body": "Lage, Umgebung und räumliche Wirkung werden aus der Luft ruhig und klar eingeordnet.",
           "button": "",
           "href": "",
           "col": 0,
@@ -76,29 +80,30 @@
           ]
         },
         {
-          "category": "Immobilien",
-          "title": "Quartier von oben",
-          "body": "Eine klare Orientierung für Exposes, Website und Vermarktung.",
+          "title": "Immobilien",
+          "body": "Außenräume, Innenräume und Details entstehen als klare Bildstrecke für Exposé, Website und digitale Vermarktung.",
           "button": "",
           "href": "",
           "col": 1,
           "row": 0,
           "strip": true,
-          "slides": ["assets/offenblende/-Portfolio-Drohnenfotografie-0003.jpeg"]
+          "slides": [
+            "assets/offenblende/-Portfolio-Drohnenfotografie-0003.jpeg"
+          ]
         },
         {
-          "category": "Immobilien",
-          "title": "Interior Details",
-          "body": "Oberflächen, Linien und Tageslicht zeigen die Qualität des Objekts.",
+          "title": "Business",
+          "body": "Professionelle Nähe für Menschen, Prozesse und Markenauftritt im Unternehmenskontext.",
           "button": "",
           "href": "",
           "col": 2.3,
           "row": 0,
           "strip": false,
-          "slides": ["assets/immo fotos/asset 5.webp"]
+          "slides": [
+            "assets/immo fotos/asset 5.webp"
+          ]
         },
         {
-          "category": "Immobilien",
           "title": "Living Space",
           "body": "Helle, ruhige Bildsprache für einladende Räume.",
           "button": "",
@@ -106,10 +111,11 @@
           "col": 3.3,
           "row": 0,
           "strip": false,
-          "slides": ["assets/immo fotos/asset 6.webp"]
+          "slides": [
+            "assets/immo fotos/asset 6.webp"
+          ]
         },
         {
-          "category": "Business",
           "title": "Team Portrait",
           "body": "Professionelle Nähe für Menschen, Prozesse und Markenauftritt.",
           "button": "",
@@ -117,10 +123,11 @@
           "col": 5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/busiens und events fotos/asset 1.webp"]
+          "slides": [
+            "assets/busiens und events fotos/asset 1.webp"
+          ]
         },
         {
-          "category": "Business",
           "title": "Brand Story",
           "body": "Portraits, Produktnähe und Arbeitssituationen mit klarer Bildsprache.",
           "button": "",
@@ -128,10 +135,11 @@
           "col": 6,
           "row": 0,
           "strip": false,
-          "slides": ["assets/busiens und events fotos/asset 4.webp"]
+          "slides": [
+            "assets/busiens und events fotos/asset 4.webp"
+          ]
         },
         {
-          "category": "Produkt",
           "title": "Product Focus",
           "body": "Reduzierte Produktfotografie für Form, Material und Nutzen.",
           "button": "",
@@ -139,7 +147,9 @@
           "col": 7,
           "row": 0,
           "strip": false,
-          "slides": ["assets/offenblende/-Portfolio-Produktfotografie-0001.jpg"]
+          "slides": [
+            "assets/offenblende/-Portfolio-Produktfotografie-0001.jpg"
+          ]
         }
       ]
     },
@@ -147,7 +157,6 @@
       "label": "UX",
       "slots": [
         {
-          "category": "Web-App",
           "title": "Tozasto",
           "body": "Plattform für nachhaltige Immobilienprojekte mit klarer Struktur.",
           "button": "",
@@ -155,10 +164,11 @@
           "col": -5.5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/uxui/asset 2.webp"]
+          "slides": [
+            "assets/uxui/asset 2.webp"
+          ]
         },
         {
-          "category": "SaaS Interface",
           "title": "Leasehub",
           "body": "Digitale Ordnung für Vermietung, Objekte und Übergaben.",
           "button": "",
@@ -166,10 +176,11 @@
           "col": -4.5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/uxui/asset 3.webp"]
+          "slides": [
+            "assets/uxui/asset 3.webp"
+          ]
         },
         {
-          "category": "Culture App",
           "title": "Staatstheater",
           "body": "Ruhiger Zugang zu einem vielschichtigen Erlebnis im Stadtraum.",
           "button": "",
@@ -177,10 +188,11 @@
           "col": -3.5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/uxui/asset 4.webp"]
+          "slides": [
+            "assets/uxui/asset 4.webp"
+          ]
         },
         {
-          "category": "Operations Tool",
           "title": "Jakob Admin",
           "body": "Touren, Ressourcen und Kontakte in einem klaren Arbeitsfluss.",
           "button": "",
@@ -188,10 +200,11 @@
           "col": -2.5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/uxui/asset 5.webp"]
+          "slides": [
+            "assets/uxui/asset 5.webp"
+          ]
         },
         {
-          "category": "Operations Tool",
           "title": "Jakob Admin",
           "body": "Planung, Status und Detailinformationen ohne Kontextwechsel.",
           "button": "",
@@ -199,10 +212,11 @@
           "col": -1,
           "row": 0,
           "strip": true,
-          "slides": ["assets/uxui/asset 6.webp"]
+          "slides": [
+            "assets/uxui/asset 6.webp"
+          ]
         },
         {
-          "category": "Healthcare Website",
           "title": "Psilox",
           "body": "Wissenschaftliche Produkt- und Unternehmensseite mit präziser Sprache.",
           "button": "",
@@ -217,7 +231,6 @@
           ]
         },
         {
-          "category": "Web-App",
           "title": "Tozasto",
           "body": "Projektseiten und Immobilienlogik als fokussierte Nutzerreise.",
           "button": "",
@@ -225,10 +238,11 @@
           "col": 1,
           "row": 0,
           "strip": true,
-          "slides": ["assets/uxui/asset 2.webp"]
+          "slides": [
+            "assets/uxui/asset 2.webp"
+          ]
         },
         {
-          "category": "Dashboard",
           "title": "Resource View",
           "body": "Reduzierter Überblick für operative Entscheidungen.",
           "button": "",
@@ -236,10 +250,11 @@
           "col": 2.3,
           "row": 0,
           "strip": false,
-          "slides": ["assets/uxui/asset 3.webp"]
+          "slides": [
+            "assets/uxui/asset 3.webp"
+          ]
         },
         {
-          "category": "SaaS Interface",
           "title": "Leasehub",
           "body": "Fortschritt und nächste Schritte sichtbar machen.",
           "button": "",
@@ -247,10 +262,11 @@
           "col": 3.3,
           "row": 0,
           "strip": false,
-          "slides": ["assets/uxui/asset 4.webp"]
+          "slides": [
+            "assets/uxui/asset 4.webp"
+          ]
         },
         {
-          "category": "Culture App",
           "title": "Staatstheater",
           "body": "Orientierung, Erzählung und Interaktion im Stadtraum.",
           "button": "",
@@ -258,10 +274,11 @@
           "col": 5,
           "row": 0,
           "strip": false,
-          "slides": ["assets/uxui/asset 5.webp"]
+          "slides": [
+            "assets/uxui/asset 5.webp"
+          ]
         },
         {
-          "category": "Healthcare Website",
           "title": "Psilox",
           "body": "Komplexe Technologie in klare Informationsarchitektur übersetzen.",
           "button": "",
@@ -269,10 +286,11 @@
           "col": 6,
           "row": 0,
           "strip": false,
-          "slides": ["assets/uxui/asset 6.webp"]
+          "slides": [
+            "assets/uxui/asset 6.webp"
+          ]
         },
         {
-          "category": "Product Design",
           "title": "Interface System",
           "body": "Wiederverwendbare Module und ruhige Hierarchien.",
           "button": "",
@@ -280,7 +298,9 @@
           "col": 7,
           "row": 0,
           "strip": false,
-          "slides": ["assets/uxui/asset 7.webp"]
+          "slides": [
+            "assets/uxui/asset 7.webp"
+          ]
         }
       ]
     }

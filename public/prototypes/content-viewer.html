@@ -75,6 +75,8 @@ input:focus,textarea:focus{border-color:rgba(0,113,227,.55);box-shadow:0 0 0 4px
       <button class="btn" id="save-local">Im Browser merken</button>
       <button class="btn subtle" id="choose-json">JSON laden</button>
       <input class="file" id="file" type="file" accept="application/json,.json">
+      <a class="btn" href="./pix-content-sheet.csv">Sheet CSV</a>
+      <a class="btn" href="./pix-content-sheet.xlsx">Sheet XLSX</a>
       <a class="btn" href="./prototype-v30.html">V30 ansehen</a>
     </div>
   </div>
@@ -166,10 +168,7 @@ function renderCard(slot, idx) {
         </div>
       </div>
       <div class="body">
-        <div class="row">
-          <label>Kategorie<input data-field="category" value="${esc(slot.category)}"></label>
-          <label>Titel<input data-field="title" value="${esc(slot.title)}"></label>
-        </div>
+        <label>Headline<input data-field="title" value="${esc(slot.title)}"></label>
         <label>Text<textarea data-field="body">${esc(slot.body)}</textarea></label>
         <div class="row">
           <label>Button<input data-field="button" value="${esc(slot.button || '')}" placeholder="optional"></label>
